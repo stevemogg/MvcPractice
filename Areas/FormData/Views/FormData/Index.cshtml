@@ -1,0 +1,376 @@
+﻿@Model FormDataModel;
+
+@*Send data via name of the input elements*@
+<form class="form-1" action="javascript:void(0);">
+    @Html.AntiForgeryToken()
+    <input type="number" name="listInts[0]" />
+    <input type="number" name="listInts[1]" />
+    <input type="number" name="listInts[2]" />
+    <input type="number" name="listInts[3]" />
+    <input type="number" name="listInts[4]" />
+    <input type="number" name="listInts[5]" />
+    <input type="number" name="listInts[6]" />
+    <button>Submit</button>
+</form>
+
+<br />
+
+<h1>Testing ajax request types with antiforgery tokens in head or body</h1>
+<h2>GET</h2>
+@* GET *@
+<form class="test-antiforgery-tokens-form get header" action="javascript:void(0);">
+    <button>get with token in header</button>
+</form>
+<form class="test-antiforgery-tokens-form get body" action="javascript:void(0);">
+    @Html.AntiForgeryToken()
+    <button>get with token in body</button>
+</form>
+
+<h2>POST</h2>
+@* POST *@
+<form class="test-antiforgery-tokens-form post header" action="javascript:void(0);">
+    <button>post with token in header</button>
+</form>
+<form class="test-antiforgery-tokens-form post body" action="javascript:void(0);">
+    @Html.AntiForgeryToken()
+    <button>post with token in body</button>
+</form>
+
+<h2>Put</h2>
+@* PUT *@
+<form class="test-antiforgery-tokens-form put header" action="javascript:void(0);">
+    <button>put with token in header</button>
+</form>
+<form class="test-antiforgery-tokens-form put body" action="javascript:void(0);">
+    @Html.AntiForgeryToken()
+    <button>put with token in body</button>
+</form>
+
+<h2>Delete</h2>
+@* DELETE *@
+<form class="test-antiforgery-tokens-form delete header" action="javascript:void(0);">
+    <button>delete with token in header</button>
+</form>
+<form class="test-antiforgery-tokens-form delete body" action="javascript:void(0);">
+    @Html.AntiForgeryToken()
+    <button>delete with token in body</button>
+</form>
+
+<h2>Head</h2>
+@* HEAD *@
+<form class="test-antiforgery-tokens-form head header" action="javascript:void(0);">
+    <button>head with token in header</button>
+</form>
+<form class="test-antiforgery-tokens-form head body" action="javascript:void(0);">
+    @Html.AntiForgeryToken()
+    <button>head with token in body</button>
+</form>
+
+<h2>Options</h2>
+@* Options *@
+<form class="test-antiforgery-tokens-form options header" action="javascript:void(0);">
+    <button>options with token in header</button>
+</form>
+<form class="test-antiforgery-tokens-form options body" action="javascript:void(0);">
+    @Html.AntiForgeryToken()
+    <button>options with token in body</button>
+</form>
+
+<h2>Patch</h2>
+@* Patch *@
+<form class="test-antiforgery-tokens-form patch header" action="javascript:void(0);">
+    <button>patch with token in header</button>
+</form>
+<form class="test-antiforgery-tokens-form patch body" action="javascript:void(0);">
+    @Html.AntiForgeryToken()
+    <button>patch with token in body</button>
+</form>
+
+<br />
+<h1>Ajax request with all settings</h1>
+<form class="ajax-all-settings" action="javascript:void(0);">
+    @Html.AntiForgeryToken()
+    <button>Send all ajax request</button>
+</form>
+<form class="ajax-all-settings-2" action="javascript:void(0);">
+    @Html.AntiForgeryToken()
+    <button>Send all ajax request 2</button>
+</form>
+
+@section Scripts
+{
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <script>
+
+        // ########################################
+        // Send data via name of the input elements
+        // ########################################
+        $("body").on("click", ".form-1 button", function (e) {
+            e.preventDefault();
+
+            $.ajax({
+                url: "@Url.Action("FormData1")",
+                type: "POST",
+                contentType: false,
+                processData: false,
+                data: new FormData($(".form-1")[0]),
+                success: function (d) {
+                    if (d.success == true) {
+                        var i = 0;
+                    } else if (d.success == false) {
+                        var i = 0;
+                    }
+                }
+            })
+        })
+
+        //###################################################
+        // Testing ajax request types with antiforgery tokens
+        //###################################################
+        $("body").on("click", ".test-antiforgery-tokens-form button", function (e) {
+            e.preventDefault();
+            var meBtn = $(this);
+            var me = $(this).closest("form");
+
+            var type = "";
+            var tokenLocation = "";
+
+            //Get Type
+            if (me.hasClass("get")) {
+                type = "GET";
+            } else if (me.hasClass("post")) {
+                type = "POST";
+            } else if(me.hasClass("put")){
+                type = "PUT";
+            } else if(me.hasClass("delete")){
+                type = "DELETE";
+            } else if(me.hasClass("head")){
+                type = "HEAD";
+            } else if (me.hasClass("options")) {
+                type = "OPTIONS";
+            } else if (me.hasClass("patch")) {
+                type = "PATCH";
+            }
+
+            //Get token location
+            if (me.hasClass("header")) {
+                tokenLocation = "HEADER";
+            } else if (me.hasClass("body")) {
+                tokenLocation = "BODY";
+            }
+
+            //Build url with type and location
+            var url = `https://localhost:7117/FormData/FormData/Test${type}RequestWithTokenIn${tokenLocation}`;
+
+            if(tokenLocation == "HEADER"){
+                $.ajax({
+                    headers: { 
+                        'RequestVerificationToken': $("[name='__RequestVerificationToken']").val(),
+                        'TestHeaderName': 'TestHeaderValue'
+                    },
+                    url: url,
+                    type: type,
+                    contentType: false,
+                    processData: false,
+                    success: function (d) {
+                        meBtn.css("background-color", "green")
+                    },
+                    error: function (d) {
+                        meBtn.css("background-color", "red")
+                    }
+                })
+            }
+            else if(tokenLocation == "BODY"){
+                $.ajax({                    
+                    url: url,
+                    type: type,
+                    contentType: false,
+                    processData: false,
+                    data: new FormData(me[0]),
+                    success: function (d) {
+                        meBtn.css("background-color", "green")                        
+                    },
+                    error: function (d) {
+                        meBtn.css("background-color", "red")
+                    }
+                })
+            }            
+        })
+
+        // ######################
+        // Ajax with all requests
+        // ######################
+        $("body").on("click", ".ajax-all-settings button", function (e) {
+            e.preventDefault();
+            var meBtn = $(this);
+            var btnColor = "";
+
+            $.ajax({
+                username: 'TestUsername',
+                password: "TestPassword",
+
+                headers: { 
+                    'RequestVerificationToken': $("[name='__RequestVerificationToken']").val(),
+                    'headersKey': 'headersPair',
+                },
+                data: new FormData($(".ajax-all-settings")[0]),
+
+                url: "@Url.Action("AjaxWithAllSettings")",
+                type: "POST",
+                method: "POST",
+                contentType: false,
+                processData: false,                
+                accepts: { mycustomtype: 'application/x-some-custom-type' },
+                async: true,
+                cache: true,
+                contents: {"contentsKey": "contentsValue"},
+                context: $(".ajax-all-settings"),
+                converters: { "* text": window.String, "text html": true, "text json": jQuery.parseJSON, "text xml": jQuery.parseXML },
+                crossDomain: false, //Change Domain. True allows redirection to another domain
+                
+                dataType: "json",
+                global: true,
+                ifModified: false,
+                isLocal: false,
+                jsonp: false,
+                jsonpCallback: function(d){
+                    console.log("jsonpCallBack");
+                },
+                mimeType: "test",
+                scriptAttrs: {},
+                scriptCharset: "",
+                timeout: 30000,
+                traditional: false,
+
+                // xhr: function(){
+                //     console.log("chr")
+                // },
+                // xhrFields: {
+                //     withCredentials: false,
+                // },
+
+                //Simply happens before the success or error function
+                //Needs to return the filtered data for success function to use or possibly the error function to use
+                dataFilter: function (data,type) {
+                    console.log("dataFilter")
+                    console.log("dataFilter - data: ",data);
+                    console.log("dataFilter - dataType: ", type);
+                    return data;
+                },
+                beforeSend: function(d){
+                    console.log("BeforeSend", d);
+                },
+                success: function(d) {
+                    console.log("success", d);
+                    btnColor = "green";
+                },
+                error: function(d){
+                    console.log("error", d);
+                    btnColor = "red";
+                },
+                statusCode: {
+                    200: function(d){
+                        console.log("Status Code 200", d);
+                        btnColor = "green";
+                    },
+                    400: function(d){
+                        console.log("Status Code 400", d);
+                        btnColor = "red";
+                    },
+                },
+                complete: function(d){
+                    console.log("complete");
+                    console.log("complete", d);
+                    meBtn.css("background-color", btnColor);
+                },
+            })
+        })
+
+        $("body").on("click", ".ajax-all-settings-2 button", function (e) {
+            e.preventDefault();
+            var meBtn = $(this);
+            var btnColor = "";
+
+            $.ajax({
+                username: 'TestUsername',
+                password: "TestPassword",
+
+                headers: {
+                    'RequestVerificationToken': $("[name='__RequestVerificationToken']").val(),
+                    'headersKey': 'headersPair',
+                },
+                data: new FormData($(".ajax-all-settings")[0]),
+
+                url: "@Url.Action("AjaxWithAllSettings")",
+                type: "POST",
+                method: "POST",
+                contentType: false,
+                processData: false,
+                accepts: { mycustomtype: 'application/x-some-custom-type' },
+                async: true,
+                cache: true,
+                contents: { "contentsKey": "contentsValue" },
+                context: $(".ajax-all-settings"),
+                converters: { "* text": window.String, "text html": true, "text json": jQuery.parseJSON, "text xml": jQuery.parseXML },
+                crossDomain: false, //Change Domain. True allows redirection to another domain
+
+                dataType: "json",
+                global: true,
+                ifModified: false,
+                isLocal: false,
+                jsonp: false,
+                jsonpCallback: function (d) {
+                    console.log("jsonpCallBack");
+                },
+                mimeType: "test",
+                scriptAttrs: {},
+                scriptCharset: "",
+                timeout: 30000,
+                traditional: false,
+
+                // xhr: function(){
+                //     console.log("chr")
+                // },
+                // xhrFields: {
+                //     withCredentials: false,
+                // },
+
+                //Simply happens before the success or error function
+                //Needs to return the filtered data for success function to use or possibly the error function to use
+                dataFilter: function (data, type) {
+                    console.log("dataFilter")
+                    console.log("dataFilter - data: ", data);
+                    console.log("dataFilter - dataType: ", type);
+                    return data;
+                },
+                beforeSend: function (d) {
+                    console.log("BeforeSend", d);
+                },
+                success: function (d) {
+                    console.log("success", d);
+                    btnColor = "green";
+                },
+                error: function (d) {
+                    console.log("error", d);
+                    btnColor = "red";
+                },
+                statusCode: {
+                    200: function (d) {
+                        console.log("Status Code 200", d);
+                        btnColor = "green";
+                    },
+                    400: function (d) {
+                        console.log("Status Code 400", d);
+                        btnColor = "red";
+                    },
+                },
+                complete: function (d) {
+                    console.log("complete");
+                    console.log("complete", d);
+                    meBtn.css("background-color", btnColor);
+                },
+            })
+        })
+
+    </script>
+}

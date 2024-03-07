@@ -1,0 +1,79 @@
+﻿@model MvcPractice.Areas.EdabitQuestions.Models.StringQuestionsModel
+
+<h1>String Questions</h1>
+
+@*Model holds a list of the questions*@
+<div id="question-button-container" class="d-flex flex-wrap gap-2">
+    @{
+        foreach (var item in Model.QuestionList)
+        {
+            <button id="@item.QuestionId" class="btn btn-secondary">@item.QuestionName</button>
+        }
+    }
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+
+    <script>
+
+        const modal = $('.modal');
+
+        //SHOW MODAL FOR QUESTION
+        //Add event listeners to all of the buttons.
+        //Each button has a unique number to call the correct method in the controller
+        $("body").on("click", "#question-button-container button", function (e) {
+            e.preventDefault();
+
+            const fd = new FormData();
+            fd.append("questionId", $(this).attr("id"));
+
+            $.ajax({
+                url: '@Url.Action("ShowQuestionModal")',
+                type: 'POST',
+                // headers: { 'RequestVerificationToken': $("[name='__RequestVerificationToken']").val() },
+                data: fd,
+                processData: false,
+                contentType: false,
+                success: function (d) {
+                    if (d.success) {
+                        modal.html(d.html);
+                        modal.modal('show');
+                    }
+                    // else if(!d.success){
+                    //     alert("Error");
+                    // }
+                    // else{
+                    //     alert("Something went wrong");
+                    // }
+                }
+            })
+        })
+
+        $("body").on("click", "#submit-btn", function (e) {
+            e.preventDefault();
+
+            const fd = new FormData($(".form")[0]);
+            fd.append("questionId", $(this).attr("data-question-id"));
+
+            $.ajax({
+                url: '@Url.Action("PerformQuestionLogic")',
+                type: 'POST',
+                data: fd,
+                processData: false,
+                contentType: false,
+                success: function (d) {
+                    if (d.success) {
+                        $(".modal-body").html(d.html);
+                    }
+                    // else if(!d.success){
+                    //     alert("error");
+                    // }
+                    // else{
+                    //     alert("Something went wrong");
+                    // }
+                }
+            })
+        })
+    </script>
+}

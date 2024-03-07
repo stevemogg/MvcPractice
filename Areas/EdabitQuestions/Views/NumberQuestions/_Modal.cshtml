@@ -1,0 +1,30 @@
+﻿@model MvcPractice.Areas.EdabitQuestions.Models.NumberQuestionsModel
+
+<div class="modal-dialog">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">@Model.SelectedQuestion.QuestionName</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            @{
+                <form class="form row">
+                    @{
+                        for (int i = 0; i < Model.SelectedQuestion.ParamNames.Count(); i++)
+                        {
+                            <div class="form-floating col">
+                                <input class="form-control" type="number" asp-for="@Model.p[i]" placeholder="@Model.SelectedQuestion.ParamNames[i]">
+                                <label class="ms-2" asp-for="@Model.p[i]">@Model.SelectedQuestion.ParamNames[i]</label>
+                                @*<span asp-validation-for="@Model.SelectedQuestion.p[0]" class="text-danger"></span>*@
+                            </div>
+                        }
+                    }
+                </form>
+            }
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" id="submit-btn" class="btn btn-primary" data-question-id="@Model.SelectedQuestion.QuestionId">Submit</button>
+        </div>
+    </div>
+</div>

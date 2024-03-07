@@ -1,0 +1,338 @@
+﻿@model TestModel;
+
+<div class="d-flex align-items-center justify-content-between">
+    <h1>@Model.Strings.Title</h1>
+    <div class="buttons-container d-flex justify-content-center">
+        <button id="@Model.Strings.Add" class="btn btn-primary" data-command="add-record">Add</button>
+    </div>
+</div>
+
+<form id="@Model.Strings.Filter" autocomplete="on" onkeydown="return event.key != 'Enter';">
+
+    <div class="input-group">
+        <span class="input-group-text" id="@Model.Strings.Search"><i class="fa-solid fa-search"></i></span>
+        <input type="search" class="form-control search-input" placeholder="@Model.Strings.SearchPlacholder" aria-label="@Model.Strings.AriaLabel" aria-describedby="@Model.Strings.Search" name="@Model.Strings.Search">
+        <button data-bs-toggle="collapse" data-bs-target="#collapseFilter" aria-expanded="false" aria-controls="collapseFilter" class="btn btn-primary filters" type="button" id="toggleFilter"><i class="fa fa-filter"></i> Filters</button>
+        <button class="btn btn-warning" type="button" id="resetFilter"><i class="fa-solid fa-rotate-right"></i>Reset</button>
+    </div>
+
+    <div id="collapseFilter" class="collapse" aria-labelledby="toggleFilter">
+        <div class="inset bg-secondary" style="padding-left: 1rem;padding-right: 1rem;padding-bottom: 0.2rem;padding-top: 0.2rem;">
+            <div class="row">
+                @*SelectList*@
+                @*<div class="col">
+                <div class="form-floating">
+                <select asp-for="@Record." asp-items="@Model.SelectList" class="form-select" placeholder="@*col_name">
+                <option value="all" selected>All</option>
+                </select>
+                <label asp-for="Record.">@col_name</label>
+                <span asp-validation-for="Record." class="text-danger"></span>
+                </div>
+                </div>*@
+                @*Date Type*@
+                @*<div class="col">
+                <div class="form-floating">
+                <input type="date" asp-for="Record." class="form-control" placeholder="@col_name" />
+                <label asp-for="Record.">@col_name</label>
+                <span asp-validation-for="Record." class="text-danger"></span>
+                </div>
+                </div>*@
+                @*Number Type*@
+                @*<div class="col">
+                <div class="form-floating">
+                <input type="number" asp-for="Record." class="form-control" placeholder="@col_name"/>
+                <label asp-for="Record.">@col_name</label>
+                <span asp-validation-for="Record." class="text-danger"></span>
+                </div>
+                </div>*@
+                @*Text Type*@
+                @*<div class="col">
+                <div class="form-floating">
+                <input type="text" asp-for="Record." class="form-control" placeholder="@col_name"/>
+                <label asp-for="Record.">@col_name</label>
+                <span asp-validation-for="Record." class="text-danger"></span>
+                </div>
+                </div>*@
+            </div>
+            <div class="row">
+                @*ISACTIVE SELECTLIST*@
+                @*<div class="col">
+                <div class="form-floating">
+                <select asp-for="Record.IsActive" class="form-select" placeholder="Is Active">
+                <option value="all">All</option>
+                <option value=True selected>Active</option>
+                <option value=False>Inactive</option>
+                </select>
+                <label asp-for="Record.IsActive">Is Active</label>
+                <span asp-validation-for="Record.IsActive" class="text-danger"></span>
+                </div>
+                </div>*@
+            </div>
+        </div>
+    </div>
+</form>
+
+<table id="@(Model.Strings.Table)" class="table table-striped hov-pointer" style="width:100%; height: fit-content">
+    <thead>
+        <tr>
+            <th>@*Column Name*@</th>
+            <th></th>
+        </tr>
+    </thead>
+</table>
+
+<canvas id="chart" style="width:100%;max-width:700px"></canvas>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js">
+</script>
+@section scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <script>
+        $(function () {
+
+            //KEY DATA TO USE IN CHART
+            var xValues = ["Italy", "France", "Spain", "USA", "Argentina"];
+            var yValues = [55, 49, 44, 24, 15];
+            var barColors = [
+                "#b91d47",
+                "#00aba9",
+                "#2b5797",
+                "#e8c3b9",
+                "#1e7145"
+            ];
+
+            //GETTING PERCENTAGES FOR EACH PIE CHART AREA
+            var percentages = [];
+            var total = 0;
+            yValues.forEach((element) => total += element);
+            var count = 0;
+            yValues.forEach(function (element) {
+                var percent = (element / total) * 100;
+                percentages.push(percent);
+                xValues[count] = `${xValues[count]} ${Math.round(percent)}%`;
+                count++;
+            });            
+
+            //SETUP THE CHART WITH THE VALUES
+            var chart = new Chart("chart", {
+                type: "pie",
+                data: {
+                    labels: xValues,
+                    datasets: [{
+                        backgroundColor: barColors,
+                        data: yValues
+                    }]
+                },
+                options: {
+                    title: {
+                        display: true,
+                        text: "World Wide Wine Production"
+                    }
+                },
+                interaction: {
+                    mode: 'index'
+                },
+                events: ['click'],
+                plugins: {
+                    datalabels: {
+                        formatter: (value, ctx) => {
+                            let sum = 0;
+                            let dataArr = ctx.chart.data.datasets[0].data;
+                            dataArr.map(data => {
+                                sum += data;
+                            });
+                            let percentage = (value * 100 / sum).toFixed(2) + "%";
+                            return percentage;
+                        },
+                        color: '#fff',
+                    }
+                }
+
+            });
+
+            // JS CHART EVENT LISTENER
+            document.getElementById("chart").onclick = function (evt) {
+                var activePoints = chart.getElementsAtEvent(evt);
+                var firstPoint = activePoints[0];
+                if(firstPoint != undefined){
+                    var label = chart.data.labels[firstPoint._index];
+                    var value = chart.data.datasets[firstPoint._datasetIndex].data[firstPoint._index];                   
+                    alert(label + ": " + value);
+                }
+                
+            };
+
+            // $("body").tooltip({ selector: '[data-toggle=tooltip]' });
+            // var ui = $('#modal');
+
+            // //Used to get the correct toast body text for delete scenarios due to the way ive set it up
+            // function createToastBodyText(text) {
+            //     if (text == "Delete" || text == "Restore")
+            //         text = text.slice(0, -1);
+            //     return text;
+            // }
+
+            // //DATATABLES/FILTER SCRIPTS
+            // var table = $('#@(Model.Strings.Table)').DataTable({
+            //     columnDefs: [{
+            //         targets: ["no-sort"],
+            //         orderable: true,
+            //     }],
+            //     order: [],
+            //     ordering: false,
+            //     dom: 'lrt<"row"<"col"i><"col-auto export">>',
+            //     scrollY: '49vh',
+            //     scrollX: '100%',
+            //     //scrollCollapse: true,
+            //     deferRender: false,
+            //     scroller: {
+            //         loadingIndicator: false,
+            //         displayBuffer: 2
+            //     },
+            //     processing: true,
+            //     serverSide: true,
+            //     ajax: {
+            //         url: '@Url.Action("CreateTable")',
+            //         type: 'POST',
+            //         datatype: 'json',
+            //         data: function (d) {
+            //             GetFilterData(d);
+            //         },
+            //         error: function (d) {
+            //             console.log("Error function")
+            //             console.log(d)
+            //             toastMessage({ header: `@(Model.Strings.Title) datatable error`, error: "text-danger" });
+            //         }
+            //     },
+            //     rowId: '',
+            //     columns: [
+            //         { data: '/*controller col data*/' },
+            //         { data: null, "defaultContent": "<i class='command @(Model.Strings.Edit) command-btn fa-solid fa-edit' data-command='edit-record'></i>" },
+            //         {
+            //             data: function (d) {
+            //                 if (d.isActive)
+            //                     return "<i class='command-btn @(Model.Strings.Delete) fa fa-trash' data-command='delete-record' title='Delete'><i/>";
+            //                 else
+            //                     return "<i class='command-btn @(Model.Strings.Restore) fa-solid fa-repeat' data-command='restore-record' title='Restore'><i/>";
+
+            //             }, className: "active-cell"
+            //         },
+            //     ],
+            //     createdRow: function (row, data, dataIndex) {
+            //         $(row).attr('data-id', data.id);
+            //         $(row).attr('data-isactive', data.isActive);
+            //     }
+            // });
+            // function GetFilterData(data) {
+            //     return new FormData(document.getElementById('@(Model.Strings.Filter)')).forEach(function (value, key) {
+            //         data[key] = value;
+            //     });
+            // }
+            // $('input[type=search]').on('keyup', function (e) {
+            //     table.search($(this).val()).draw();
+            //     if (e.key == 'Enter')
+            //         this.blur();
+            // });
+            // $('#resetFilter').on('click', function () {
+            //     document.getElementById('@(Model.Strings.Filter)').reset();
+            //     $('input[type=search]').val('').trigger('keyup');
+            // });
+            // $('#@(Model.Strings.Filter)').on('input', 'input, select', function () {
+            //     table.draw();
+            // });
+
+            // //Add, Edit and Delete prices script --> show modal
+            // $("body").on("click", "#@(Model.Strings.Add), .@(Model.Strings.Edit), .@(Model.Strings.Delete) .@(Model.Strings.Restore)", function (e) {
+            //     e.preventDefault();
+            //     //Get add edit or delete and setup formdata with type
+            //     var type = $(this).attr("data-command").replace("-record", "");
+            //     var fd = new FormData();
+            //     fd.append("Type", type);
+
+            //     //Populate with existing record details
+            //     if (type == "edit" || type == "delete" || type == "restore") {
+            //         fd.append("Record.Id", $(this).closest("tr").attr("data-id"));
+            //     }
+
+            //     $.ajax({
+            //         url: '@Url.Action("HandleRecordModal")',
+            //         type: 'POST',
+            //         data: fd,
+            //         // These two falses make the form data work as it stops jQuery trying to do anything fancy.
+            //         processData: false,
+            //         contentType: false,
+            //         success: function (d) {
+            //             //Prepare toast text
+            //             type = type.charAt(0).toUpperCase() + type.slice(1);
+            //             if (d.success == true) {
+            //                 ui.html(d.html);
+            //                 ui.modal('show');
+            //             }
+            //             else if (!d.success) {
+            //                 //Prepare toast text
+            //                 let toastBodyType = createToastBodyText(type);
+            //                 toastMessage({ header: `@(Model.Strings.Title) ${type} - Error`, body: `Something went wrong ${toastBodyType}ing the @(Model.Strings.Title)`, error: "text-danger" });
+            //             }
+            //         }
+            //     });
+            // })
+
+            // //Add, Edit and Delete price script --> perform command
+            // $("body").on("click", "#modal-add, #modal-edit, #modal-delete, #modal-restore", function (e) {
+            //     e.preventDefault();
+
+            //     var doRequest = true;
+
+            //     //Get type
+            //     var type = $(this).attr("id").replace("modal-", "");
+            //     var fd = new FormData();
+
+            //     //Append to formdata dependant on type
+            //     if (type == "add" || type == "edit") {
+            //         //Validate product details
+            //         var form = $(".record-form");
+            //         form.removeData('validator');
+            //         form.removeData('unobtrusiveValidation');
+            //         $.validator.unobtrusive.parse(form);
+            //         form.validate();
+            //         if (form.valid() == true) {
+            //             fd = new FormData($(".record-form")[0]);
+            //             fd.append("Type", type);
+            //         }
+            //         else if (form.valid() == false) {
+            //             doRequest = false;
+            //             toastMessage({ header: `@(Model.Strings.Title + " - " + Model.Type) - Incorrect Field`, body: `You have left an incorrect input!`, error: "text-danger" });
+            //         }
+            //     }
+            //     else if (type == "delete" || type == "restore") {
+            //         fd.append("SaleRecord.Id", $(this).attr("data-id"));
+            //         fd.append("Type", type);
+            //     }
+
+            //     if (doRequest == true) {
+            //         $.ajax({
+            //             url: '@Url.Action("HandleRecord")',
+            //             type: 'POST',
+            //             data: fd,
+            //             // These two falses make the form data work as it stops jQuery trying to do anything fancy.
+            //             processData: false,
+            //             contentType: false,
+            //             success: function (d) {
+            //                 //Prepare toast text
+            //                 type = type.charAt(0).toUpperCase() + type.slice(1);
+            //                 let toastBodyType = createToastBodyText(type);
+            //                 if (d.success) {
+            //                     table.draw();
+            //                     toastMessage({ header: `@(Model.Strings.Title) ${type}`, body: `@(Model.Strings.Title) has been ${toastBodyType}ed`, error: "text-success" });
+            //                 }
+            //                 else if (!d.success) {
+            //                     toastMessage({ header: `@(Model.Strings.Title) ${type}`, body: `Something went wrong ${toastBodyType}ing the @(Model.Strings.Title)`, error: "text-danger" });
+            //                 }
+            //             }
+            //         });
+            //     }
+            // })
+        });
+    </script>
+}
