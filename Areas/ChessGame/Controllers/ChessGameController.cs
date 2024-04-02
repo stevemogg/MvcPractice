@@ -1,70 +1,98 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.TeamFoundation.Dashboards.WebApi;//
+using Microsoft.TeamFoundation.Work.WebApi;
 using MvcPractice.Areas.ChessGame.Models;
+using MvcPractice.Helpers;
+using Newtonsoft.Json;
+using Ninject.Activation.Caching;
+using System.Reflection;
+using System.Runtime.Serialization.Formatters.Binary;//
 
 namespace MvcPractice.Areas.ChessGame.Controllers
 {
     [Area("ChessGame")]
     public class ChessGameController : Controller
     {
+        #region Dependancy injection && game setup/get
+        private readonly IViewRenderService _viewRenderService;
+        public ChessGameModel _game { get; set; }
+        public ChessGameController(IViewRenderService viewRenderService)
+        {
+            _viewRenderService = viewRenderService;
+        }
+        #endregion
+
+        public void SetUpGameModel()
+        {            
+        }      
+        
         public IActionResult Index()
         {
-            ChessGameModel model = SetUpNewGameModel();
+            ChessGameModel model = new ChessGameModel();
+            model.GameJsonString = Newtonsoft.Json.JsonConvert.SerializeObject(model);
 
             return View(model);
         }
-        public ChessGameModel SetUpNewGameModel() 
+
+        public ActionResult GetMoves(ChessGameModel model)
         {
-            ChessGameModel newGame = new ChessGameModel();
-
-            //Player1
-            RookPiece OneRook1 = new RookPiece(true,1,1);
-            KnightPiece OneKnight1 = new KnightPiece(true,1,2);
-            BishopPiece OneBishop1 = new BishopPiece(true,1,3);
-            QueenPiece OneQueen1 = new QueenPiece(true,1,4);
-            KingPiece OneKing1 = new KingPiece(true,1,5);
-            BishopPiece OneBishop2 = new BishopPiece(true,1,6);
-            KnightPiece OneKnight2 = new KnightPiece(true,1,7);
-            RookPiece OneRook2 = new RookPiece(true,1,8);
-            newGame.Player1Pieces = new List<ChessPiece>();
-            newGame.Player1Pieces.Add(OneRook1);
-            newGame.Player1Pieces.Add(OneKnight1);
-            newGame.Player1Pieces.Add(OneBishop1);
-            newGame.Player1Pieces.Add(OneQueen1);
-            newGame.Player1Pieces.Add(OneKing1);
-            newGame.Player1Pieces.Add(OneBishop2);
-            newGame.Player1Pieces.Add(OneKnight2);
-            newGame.Player1Pieces.Add(OneRook2);
-            for (int i = 1; i < 9; i++)
+            try
             {
-                PawnPiece pawn = new PawnPiece(true,2,i);
-                newGame.Player1Pieces.Add(pawn);
-            }
+                ////Get the column
+                //var col = _game.ChessBoard.Board[model.x].Columns[model.y];
 
-            //Player2
-            RookPiece TwoRook1 = new RookPiece(false, 8, 1);
-            KnightPiece TwoKnight1 = new KnightPiece(false, 8, 2);
-            BishopPiece TwoBishop1 = new BishopPiece(false, 8, 3);
-            QueenPiece TwoQueen1 = new QueenPiece(false, 8, 4);
-            KingPiece TwoKing1 = new KingPiece(false, 8, 5);
-            BishopPiece TwoBishop2 = new BishopPiece(false, 8, 6);
-            KnightPiece TwoKnight2 = new KnightPiece(false, 8, 7);
-            RookPiece TwoRook2 = new RookPiece(false, 8, 8);
-            newGame.Player2Pieces = new List<ChessPiece>();
-            newGame.Player2Pieces.Add(TwoRook1);
-            newGame.Player2Pieces.Add(TwoKnight1);
-            newGame.Player2Pieces.Add(TwoBishop1);
-            newGame.Player2Pieces.Add(TwoQueen1);
-            newGame.Player2Pieces.Add(TwoKing1);
-            newGame.Player2Pieces.Add(TwoBishop2);
-            newGame.Player2Pieces.Add(TwoKnight2);
-            newGame.Player2Pieces.Add(TwoRook2);
-            for (int i = 1; i < 9; i++)
+                //List<Tuple<int, int>> pawnMoves = new List<Tuple<int, int>>() { };
+                //pawnMoves.Add(new Tuple<int, int>(0, 1));
+                //pawnMoves.Add(new Tuple<int, int>(0, 2));
+
+                //foreach (var move in pawnMoves)
+                //{
+                //    _game.ChessBoard.Board[model.x + move.Item1].Columns[model.y + move.Item2].HighlightMove = true;
+                //}
+
+                //string html = _viewRenderService.RenderToStringAsync("_Board", _game).Result;
+
+                var col = model.ChessBoard.Board[model.MovesModel.x].Columns[model.MovesModel.y];
+                var piece = col.Piece;
+                List<Tuple<int, int>> moves = new List<Tuple<int, int>>() { };
+                                
+                if (model.MovesModel.pieceType == ChessPieceType.Pawn)
+                {
+                    //piece moved?
+                    //player1?
+                    //forwards move - factor in double forwards
+                    //diagonal take moves
+                    //First forwards move
+
+                    //FirstMove
+                    Tuple<int, int> firstMove = new Tuple<int, int>(
+                            ((col.X + 1) * (piece.Player1 == true ? 1 : -1)),
+                            (col.Y)
+                        );
+                    if (model.ChessBoard.Board[firstMove.Item1].Columns[firstMove.Item2].Piece == null)                                          
+                        moves.Add(firstMove);
+                    //SecondMove
+                    Tuple<int, int> secondMove = new Tuple<int, int>(
+                            ((col.X + 2) * (piece.Player1 == true ? 1 : -1)),
+                            (col.Y)
+                        );
+                    if (piece.HasMoved == false && model.ChessBoard.Board[model.MovesModel.x].Columns[model.MovesModel.y].Piece == null)                                                                   
+                        moves.Add(secondMove);
+                    //DiagonalMoves
+                    Tuple<int, int> diagonalRightMove = new Tuple<int, int>(
+                            ((col.X + 1) * (piece.Player1 == true ? 1 : -1)),
+                            (col.Y + 1)
+                        );
+                    if (piece.HasMoved == false && model.ChessBoard.Board[diagonalRightMove.Item1].Columns[diagonalRightMove.Item2].Piece == null)
+                        moves.Add(diagonalRightMove);
+                    
+                }
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
             {
-                PawnPiece pawn = new PawnPiece(false, 7, i);
-                newGame.Player2Pieces.Add(pawn);
+                return Json(new { success = false });
             }
-
-            return newGame;
         }
     }
 }

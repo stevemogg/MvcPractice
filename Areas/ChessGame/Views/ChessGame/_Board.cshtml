@@ -1,0 +1,63 @@
+﻿@model ChessGameModel
+
+
+<div class="d-flex flex-column player1 flex-wrap" style="">
+    @{
+        for (int i = 1; i < 17; i++)
+        {
+            @:<div class="w-100 h-100 piece-@i" style="max-width: 50px;"></div>
+        }
+    }
+</div>
+<div class="d-flex flex-column w-100 h-100" style="max-width:720px; max-height: 720px;">
+
+    @{
+        foreach (var row in Model.ChessBoard.Board)
+        {
+            <div class="d-flex w-100 h-100">
+                @{
+                    foreach (var col in row.Columns)
+                    {
+                        var bgColor = "";
+                        if (col.HighlightMove == true)
+                        {
+                            bgColor = "bg-danger";
+                        }
+                        else{
+                            if (col.X % 2 == 1)
+                            {
+                                if (col.Y % 2 == 1)
+                                    bgColor = "bg-warning";
+                                else
+                                    bgColor = "bg-success";
+                            }
+                            else if (col.X % 2 == 0)
+                            {
+                                if (col.Y % 2 == 1)
+                                    bgColor = "bg-success";
+                                else
+                                    bgColor = "bg-warning";
+                            }
+                        }                        
+                        <div class="chess-col d-flex justify-content-center align-items-center r-@(col.X)c-@(col.Y) @bgColor p-1 w-100 h-100" data-x="@col.X" data-y="@col.Y" style="max-width: 90px !important; max-height: 90px !important; font-size: 70px;">                            
+                            @{
+                                if (col.Piece != null)
+                                {
+                                    @Html.Raw(col.Piece.FaIcon)                                    
+                                }
+                            }
+                        </div>
+                    }
+                }
+            </div>
+        }
+    }
+</div>
+<div class="d-flex flex-column player2 flex-wrap" style="max-height: 720px;">
+    @{
+        for (int i = 1; i < 17; i++)
+        {
+            @:<div class="w-100 h-100 piece-@i" style="max-width: 50px;"></div>
+        }
+    }
+</div>
