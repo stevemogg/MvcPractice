@@ -5,77 +5,47 @@ using System.Media;
 using System.Net;
 
 namespace MvcPractice.Areas.ChessGame.Models
-{
-    public class GetMovesModel
+{    
+    public class ChessGameModel
+    {
+        public ChessBoard ChessBoard { get; set; }
+        public PieceToPotentialMove PieceToPotentialMove { get; set; }
+        public int TurnCount { get; set; }
+        public bool Turn { get; set; }
+    }
+    #region Chess functionality models
+    public class PieceToPotentialMove
     {
         public int x { get; set; }
         public int y { get; set; }
         public ChessPieceType pieceType { get; set; }
     }
-    public class ChessGameModel
+    public class MovePieceModel
     {
-        public ChessBoard ChessBoard = new ChessBoard();
-        public int TurnCount { get; set; }
-        public bool Turn { get; set; }
-        public string GameJsonString { get; set; }
-        public GetMovesModel MovesModel { get; set; }
+        public int x { get; set; }
+        public int y { get; set; }
     }
+    #endregion
 
     #region Chess Board
     public class ChessBoard
     {
-        public ChessBoard()
-        {
-            List<ChessPiece?> line1 = new List<ChessPiece?>() { new RookPiece(true), new KnightPiece(true), new BishopPiece(true), new QueenPiece(true), new KingPiece(true), new BishopPiece(true), new KnightPiece(true), new RookPiece(true) };
-            List<ChessPiece?> line2 = new List<ChessPiece?>() { new PawnPiece(true), new PawnPiece(true), new PawnPiece(true), new PawnPiece(true), new PawnPiece(true), new PawnPiece(true), new PawnPiece(true), new PawnPiece(true) };
-
-            List<ChessPiece?> line7 = new List<ChessPiece?>() { new PawnPiece(false), new PawnPiece(false), new PawnPiece(false), new PawnPiece(false), new PawnPiece(false), new PawnPiece(false), new PawnPiece(false), new PawnPiece(false) };
-            List<ChessPiece?> line8 = new List<ChessPiece?>() { new RookPiece(false), new KnightPiece(false), new BishopPiece(false), new QueenPiece(false), new KingPiece(false), new BishopPiece(false), new KnightPiece(false), new RookPiece(false) };
-
-            this.Board = new List<ChessRow>() { };
-
-            for (int x = 0; x < 8; x++)
-            {
-                ChessRow row = new ChessRow() { };
-                row.X = x+1;
-
-                for (int y = 0; y < 8; y++)
-                {
-                    ChessColumn col = new ChessColumn();
-                    col.X = x + 1;
-                    col.Y = y + 1;
-
-                    if (x == 0)
-                        col.Piece = line1[y];
-                    else if (x == 1)
-                        col.Piece = line2[y];
-                    else if (x == 6)
-                        col.Piece = line7[y];
-                    else if (x == 7)
-                        col.Piece = line8[y];
-
-                    row.Columns.Add(col);
-                }
-                this.Board.Add(row);
-            }
-        }
-
-        public List<ChessRow> Board { get; set; }
+        public List<ChessRow> Rows { get; set; }
         public List<ChessPiece> Player1DeadPieces { get; set; }
         public List<ChessPiece> Player2DeadPieces { get; set; }
     }
     public class ChessRow 
     {
-        public List<ChessColumn> Columns = new List<ChessColumn>();
+        public List<ChessColumn> Columns { get; set; }
         public int X { get; set; }
     }
     public class ChessColumn
     {
-        public ChessPiece? Piece = null;
+        public ChessPiece? Piece { get; set; }
         //Co-ordinates        
         public int X { get; set; }
         public int Y { get; set; }
-        public bool HighlightMove = false;
+        public bool HighlightMove { get; set; }
     }
     #endregion
 
@@ -89,8 +59,8 @@ namespace MvcPractice.Areas.ChessGame.Models
         public ChessPieceType Type { get; set; }
         public string FaIcon { get; set; }
         public bool Player1 { get; set; }
-        public bool HasMoved = false;
-        public bool Alive = true;
+        public bool HasMoved { get; set; }
+        public bool Alive { get; set; }
     }
     public class KingPiece : ChessPiece
     {

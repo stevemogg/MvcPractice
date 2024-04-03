@@ -16,38 +16,54 @@
 {
     @await Html.PartialAsync("_ValidationScriptsPartial")
     <script>
-        
-        //Store the game in an object. 
-        // This gets updated throughout each request
-        var jsObject = @Html.Raw(Model.GameJsonString);
 
-        $("body").on("click", ".chess-col", function(e){
+        $("body").on("click", ".bg-success, .bg-warning", function (e) {
             e.preventDefault();
 
             var me = $(this);
-            var piece = $(this).find("svg");
-            jsObject["MovesModel"] = {
-                "x":parseInt($(me).attr("data-x")), 
-                "y": parseInt($(me).attr("data-y")), 
-                "pieceType":$(piece).attr("data-piece")
-            };
+            var piece = $(me).find("svg");
 
-            //Ajax request didnt want to send the most updated jsObject
-            // $.ajax({
-            //     type: "POST",
-            //     url: "@Url.Action("GetMoves")",
-            //     processData: false, 
-            //     contentType: false,
-            //     data: jsObject,
-            //     success: function(d){
-            //         // console.log(d);
-            //     }                
-            // })
+            if (piece.length != 0) {
+                $.post("@Url.Action("GetMoves")",
+                    {
+                        "x": parseInt($(me).attr("data-x")),
+                        "y": parseInt($(me).attr("data-y")),
+                        "pieceType": $(piece).attr("data-piece")
+                    }, 
+                    function (d) {
+                        $(".chess-board-container").html(d.html);
+                    }
+                );
+            }
+            else if(piece.length == 0){
+                if ($(".chess-board .board-row div.bg-danger").length != 0) {
+                    $.get("@Url.Action("RemovePotentialMoves")",
+                        {},
+                        function (d) {
+                            $(".chess-board-container").html(d.html);
+                        }
+                    );
+                }                
+            }
+        })
 
-            //Post request seemed to send the updated data
-            $.post( "@Url.Action("GetMoves")", jsObject, function( data ) {
-                    
-            });
+        $("body").on("click", ".bg-danger", function(e){
+            e.preventDefault();
+
+            var me = $(this);
+            var piece = $(me).find("svg");
+
+            if(piece.length == 0){
+                $.post("@Url.Action("MovePiece")",
+                    {
+                        "x": parseInt($(me).attr("data-x")),
+                        "y": parseInt($(me).attr("data-y"))
+                    }, 
+                    function (d) {
+                        $(".chess-board-container").html(d.html);
+                    }
+                );
+            }
         })
 
         // var potentialMoveElements = [];
