@@ -34,6 +34,10 @@ namespace MvcPractice.Areas.ChessGame.Controllers
             {
                 ChessGameModel model = new ChessGameModel() { };
                 model.ChessBoard = new ChessBoard();
+
+                model.ChessBoard.Player1DeadPieces = new List<ChessPiece> { };
+                model.ChessBoard.Player2DeadPieces = new List<ChessPiece> { };
+
                 List<ChessPiece?> line1 = new List<ChessPiece?>() { new RookPiece(true), new KnightPiece(true), new BishopPiece(true), new QueenPiece(true), new KingPiece(true), new BishopPiece(true), new KnightPiece(true), new RookPiece(true) };
                 List<ChessPiece?> line2 = new List<ChessPiece?>() { new PawnPiece(true), new PawnPiece(true), new PawnPiece(true), new PawnPiece(true), new PawnPiece(true), new PawnPiece(true), new PawnPiece(true), new PawnPiece(true) };
 
@@ -85,10 +89,24 @@ namespace MvcPractice.Areas.ChessGame.Controllers
         public void SetGame(ChessGameModel model)
         {
             HttpContext.Session.SetString("UserData", Newtonsoft.Json.JsonConvert.SerializeObject(model));
+        }        
+        [NonAction]
+        public ChessGameModel ResetPotentialMovesFromGame(ChessGameModel model)
+        {
+            foreach (var row in model.ChessBoard.Rows)
+            {
+                foreach (var col in row.Columns)
+                {
+                    col.HighlightMove = false;
+                }
+            }
+            model.PieceToPotentialMove = null;
+            return model;
         }
         [NonAction]
-        public ChessGameModel ResetPotentialMoves(ChessGameModel model)
+        public ChessGameModel ResetPotentialMovesFromSession()
         {
+            ChessGameModel model = GetGame();
             foreach (var row in model.ChessBoard.Rows)
             {
                 foreach (var col in row.Columns)
@@ -112,9 +130,9 @@ namespace MvcPractice.Areas.ChessGame.Controllers
         [NonAction]
         public ChessGameModel ResetPotentialMovesAndGetGame()
         {
-            ChessGameModel model = GetGame();
-            
+            ChessGameModel model = ResetPotentialMovesFromSession();            
             SetGame(model);
+
             return model;
         }
         #endregion
@@ -232,15 +250,29 @@ namespace MvcPractice.Areas.ChessGame.Controllers
             {
                 ChessGameModel model = GetGame();
 
-                //find and remove
-                var piece = model.ChessBoard.Rows[model.PieceToPotentialMove.x-1].Columns[model.PieceToPotentialMove.y-1].Piece;
+                //find pieceToMove and remove from column
+                var pieceToMove = model.ChessBoard.Rows[model.PieceToPotentialMove.x-1].Columns[model.PieceToPotentialMove.y-1].Piece;
+                pieceToMove.HasMoved = true;
                 model.ChessBoard.Rows[model.PieceToPotentialMove.x-1].Columns[model.PieceToPotentialMove.y-1].Piece = null;
 
-                //find and insert
-                model.ChessBoard.Rows[moveModel.x-1].Columns[moveModel.y-1].Piece = piece;
+                //find pieceToReplace || Or Empty column and insert pieceToMove               
+                if (model.ChessBoard.Rows[moveModel.x - 1].Columns[moveModel.y - 1].Piece != null)
+                {
+                    ChessPiece pieceToReplace = model.ChessBoard.Rows[moveModel.x - 1].Columns[moveModel.y - 1].Piece;
+
+                    if (pieceToReplace.Player1 == true)
+                        model.ChessBoard.Player1DeadPieces.Add(pieceToReplace);
+                    else if (pieceToReplace.Player1 == false)
+                        model.ChessBoard.Player2DeadPieces.Add(pieceToReplace);
+
+                    model.ChessBoard.Rows[moveModel.x - 1].Columns[moveModel.y - 1].Piece = null;
+                }
+                model.ChessBoard.Rows[moveModel.x-1].Columns[moveModel.y-1].Piece = pieceToMove;
 
                 //reset game potentialmove
                 model.PieceToPotentialMove = null;
+                ChessGameModel newModel = ResetPotentialMovesFromGame(model);
+                SetGame(newModel);
 
                 string html = _viewRenderService.RenderToStringAsync("_Board", model).Result;
                 return Json(new { success = true, html});

@@ -3,10 +3,14 @@
 
 <div class="d-flex flex-column player1 flex-wrap" style="">
     @{
-        for (int i = 1; i < 17; i++)
+        foreach (var item in Model.ChessBoard.Player1DeadPieces)
+        {
+            @Html.Raw(item.FaIcon)            
+        }
+        @*for (int i = 1; i < 17; i++)
         {
             @:<div class="w-100 h-100 piece-@i" style="max-width: 50px;"></div>
-        }
+        }*@
     }
 </div>
 <div class="d-flex flex-column w-100 h-100 chess-board" style="max-width:720px; max-height: 720px;">
@@ -55,9 +59,13 @@
 </div>
 <div class="d-flex flex-column player2 flex-wrap" style="max-height: 720px;">
     @{
-        for (int i = 1; i < 17; i++)
+        foreach (var item in Model.ChessBoard.Player2DeadPieces)
+        {
+            @Html.Raw(item.FaIcon)
+        }
+        @*for (int i = 1; i < 17; i++)
         {
             @:<div class="w-100 h-100 piece-@i" style="max-width: 50px;"></div>
-        }
+        }*@
     }
 </div>

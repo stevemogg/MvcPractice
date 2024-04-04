@@ -67,7 +67,7 @@ namespace MvcPractice.Areas.ChessGame.Models
         public KingPiece(bool player1) : base(player1)
         {
             this.Type = ChessPieceType.King;
-            this.FaIcon = $"<i class=\"fa-solid fa-chess-king h-100 w-100\" style=\"color:{(player1 ? "black" : "white")};\" data-piece=\"{this.Type}\" data-player=\"{(player1 ? 1 : 2)}\"></i>";
+            this.FaIcon = $"<i class=\"fa-solid fa-chess-king\" style=\"color:{(player1 ? "black" : "white")};\" data-piece=\"{this.Type}\" data-player=\"{(player1 ? 1 : 2)}\"></i>";
         }
     }
     public class QueenPiece : ChessPiece
@@ -75,7 +75,7 @@ namespace MvcPractice.Areas.ChessGame.Models
         public QueenPiece(bool player1) : base(player1)
         {
             this.Type = ChessPieceType.Queen;
-            this.FaIcon = $"<i class=\"fa-solid fa-chess-queen h-100 w-100\" style=\"color:{(player1 ? "black" : "white")};\" data-piece=\"{this.Type}\" data-player=\"{(player1 ? 1 : 2)}\"></i>";
+            this.FaIcon = $"<i class=\"fa-solid fa-chess-queen\" style=\"color:{(player1 ? "black" : "white")};\" data-piece=\"{this.Type}\" data-player=\"{(player1 ? 1 : 2)}\"></i>";
         }
     }
     public class RookPiece : ChessPiece
@@ -83,7 +83,7 @@ namespace MvcPractice.Areas.ChessGame.Models
         public RookPiece(bool player1) : base(player1)
         {
             this.Type = ChessPieceType.Rook;
-            this.FaIcon = $"<i class=\"fa-solid fa-chess-rook h-100 w-100\" style=\"color:{(player1 ? "black" : "white")};\" data-piece=\"{this.Type}\" data-player=\"{(player1 ? 1 : 2)}\"></i>";
+            this.FaIcon = $"<i class=\"fa-solid fa-chess-rook\" style=\"color:{(player1 ? "black" : "white")};\" data-piece=\"{this.Type}\" data-player=\"{(player1 ? 1 : 2)}\"></i>";
         }
     }
     public class BishopPiece : ChessPiece
@@ -91,7 +91,7 @@ namespace MvcPractice.Areas.ChessGame.Models
         public BishopPiece(bool player1) : base(player1)
         {
             this.Type = ChessPieceType.Bishop;
-            this.FaIcon = $"<i class=\"fa-solid fa-chess-bishop h-100 w-100\" style=\"color:{(player1 ? "black" : "white")};\" data-piece=\"{this.Type}\" data-player=\"{(player1 ? 1 : 2)}\"></i>";
+            this.FaIcon = $"<i class=\"fa-solid fa-chess-bishop\" style=\"color:{(player1 ? "black" : "white")};\" data-piece=\"{this.Type}\" data-player=\"{(player1 ? 1 : 2)}\"></i>";
         }
     }
     public class KnightPiece : ChessPiece
@@ -99,7 +99,7 @@ namespace MvcPractice.Areas.ChessGame.Models
         public KnightPiece(bool player1) : base(player1)
         {
             this.Type = ChessPieceType.Knight;
-            this.FaIcon = $"<i class=\"fa-solid fa-chess-knight h-100 w-100\" style=\"color:{(player1 ? "black" : "white")};\" data-piece=\"{this.Type}\" data-player=\"{(player1 ? 1 : 2)}\"></i>";
+            this.FaIcon = $"<i class=\"fa-solid fa-chess-knight\" style=\"color:{(player1 ? "black" : "white")};\" data-piece=\"{this.Type}\" data-player=\"{(player1 ? 1 : 2)}\"></i>";
         }
     }
     public class PawnPiece : ChessPiece
@@ -107,7 +107,7 @@ namespace MvcPractice.Areas.ChessGame.Models
         public PawnPiece(bool player1) : base(player1)
         {
             this.Type = ChessPieceType.Pawn;
-            this.FaIcon = $"<i class=\"fa-solid fa-chess-pawn h-100 w-100\" style=\"color:{(player1 ? "black" : "white")};\" data-piece=\"{this.Type}\" data-player=\"{(player1 ? 1 : 2)}\" data-pawn-moved=\"false\" ></i>";
+            this.FaIcon = $"<i class=\"fa-solid fa-chess-pawn\" style=\"color:{(player1 ? "black" : "white")};\" data-piece=\"{this.Type}\" data-player=\"{(player1 ? 1 : 2)}\" data-pawn-moved=\"false\" ></i>";
         }
     }
     public enum ChessPieceType
