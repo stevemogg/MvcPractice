@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.TeamFoundation.Dashboards.WebApi;//
 using Microsoft.TeamFoundation.Work.WebApi;
+using Microsoft.TeamFoundation.WorkItemTracking.Process.WebApi.Models;
+using Microsoft.VisualStudio.Services.Profile;
 using Microsoft.VisualStudio.Services.TestResults.WebApi;
 using MvcPractice.Areas.ChessGame.Models;
 using MvcPractice.Helpers;
@@ -15,7 +17,7 @@ namespace MvcPractice.Areas.ChessGame.Controllers
     [Area("ChessGame")]
     public class ChessGameController : Controller
     {
-        #region Dependancy Injection && Game Setup/Get
+        #region Dependancy Injection && Game Setup / Get / ResetPotentialMoves
         private readonly IViewRenderService _viewRenderService;
         public ChessGameModel _game { get; set; }
         public ChessGameController(IViewRenderService viewRenderService)
@@ -34,25 +36,26 @@ namespace MvcPractice.Areas.ChessGame.Controllers
             {
                 ChessGameModel model = new ChessGameModel() { };
                 model.ChessBoard = new ChessBoard();
+
+                model.ChessBoard.Player1DeadPieces = new List<ChessPiece> { };
+                model.ChessBoard.Player2DeadPieces = new List<ChessPiece> { };
+
                 List<ChessPiece?> line1 = new List<ChessPiece?>() { new RookPiece(true), new KnightPiece(true), new BishopPiece(true), new QueenPiece(true), new KingPiece(true), new BishopPiece(true), new KnightPiece(true), new RookPiece(true) };
                 List<ChessPiece?> line2 = new List<ChessPiece?>() { new PawnPiece(true), new PawnPiece(true), new PawnPiece(true), new PawnPiece(true), new PawnPiece(true), new PawnPiece(true), new PawnPiece(true), new PawnPiece(true) };
 
                 List<ChessPiece?> line7 = new List<ChessPiece?>() { new PawnPiece(false), new PawnPiece(false), new PawnPiece(false), new PawnPiece(false), new PawnPiece(false), new PawnPiece(false), new PawnPiece(false), new PawnPiece(false) };
                 List<ChessPiece?> line8 = new List<ChessPiece?>() { new RookPiece(false), new KnightPiece(false), new BishopPiece(false), new QueenPiece(false), new KingPiece(false), new BishopPiece(false), new KnightPiece(false), new RookPiece(false) };
 
-                model.ChessBoard.Rows = new List<ChessRow>() { };
+                model.ChessBoard.Board = new List<List<ChessColumn>>() { };
 
                 for (int x = 0; x < 8; x++)
                 {
-                    ChessRow row = new ChessRow() { };
-                    row.Columns = new List<ChessColumn>() { };
-                    row.X = x + 1;
-
+                    List<ChessColumn> row = new List<ChessColumn>() { };
                     for (int y = 0; y < 8; y++)
                     {
                         ChessColumn col = new ChessColumn();
-                        col.X = x + 1;
-                        col.Y = y + 1;
+                        col.X = x;
+                        col.Y = y;
 
                         if (x == 0)
                             col.Piece = line1[y];
@@ -63,9 +66,9 @@ namespace MvcPractice.Areas.ChessGame.Controllers
                         else if (x == 7)
                             col.Piece = line8[y];
 
-                        row.Columns.Add(col);
+                        row.Add(col);
                     }
-                    model.ChessBoard.Rows.Add(row);
+                    model.ChessBoard.Board.Add(row);
                 }
                 HttpContext.Session.SetString("UserData", Newtonsoft.Json.JsonConvert.SerializeObject(model));
                 return model;
@@ -87,11 +90,25 @@ namespace MvcPractice.Areas.ChessGame.Controllers
             HttpContext.Session.SetString("UserData", Newtonsoft.Json.JsonConvert.SerializeObject(model));
         }
         [NonAction]
-        public ChessGameModel ResetPotentialMoves(ChessGameModel model)
+        public ChessGameModel ResetPotentialMovesFromGame(ChessGameModel model)
         {
-            foreach (var row in model.ChessBoard.Rows)
+            foreach (var row in model.ChessBoard.Board)
             {
-                foreach (var col in row.Columns)
+                foreach (var col in row)
+                {
+                    col.HighlightMove = false;
+                }
+            }
+            model.PieceToPotentialMove = null;
+            return model;
+        }
+        [NonAction]
+        public ChessGameModel ResetPotentialMovesFromSession()
+        {
+            ChessGameModel model = GetGame();
+            foreach (var row in model.ChessBoard.Board)
+            {
+                foreach (var col in row)
                 {
                     col.HighlightMove = false;
                 }
@@ -112,11 +129,151 @@ namespace MvcPractice.Areas.ChessGame.Controllers
         [NonAction]
         public ChessGameModel ResetPotentialMovesAndGetGame()
         {
-            ChessGameModel model = GetGame();
-            
+            ChessGameModel model = ResetPotentialMovesFromSession();
             SetGame(model);
+
             return model;
         }
+        #endregion
+
+        #region Piece Moves
+        //PAWN
+        [NonAction]
+        public List<Tuple<int, int>> GetPawnMoves(ChessGameModel model, ChessColumn col, ChessPiece piece)
+        {
+            List<Tuple<int, int>> moves = new List<Tuple<int, int>>() { };
+            //FirstMove
+            try
+            {
+                Tuple<int, int> firstMove = new Tuple<int, int>(
+                        (col.X + (1 * PlayerMoveDirection(piece.Player1))),
+                        (col.Y)
+                    );
+                if (model.ChessBoard.Board[firstMove.Item1][firstMove.Item2].Piece == null)
+                    moves.Add(firstMove);
+            }
+            catch (Exception ex) { }
+            //SecondMove - Can only do when firstmove is available
+            if (moves.Count != 0)
+            {
+                try
+                {
+                    Tuple<int, int> secondMove = new Tuple<int, int>(
+                            (col.X + (2 * PlayerMoveDirection(piece.Player1))),
+                            (col.Y)
+                        );
+                    if (piece.HasMoved == false && model.ChessBoard.Board[secondMove.Item1][secondMove.Item2].Piece == null)
+                        moves.Add(secondMove);
+                }
+                catch (Exception ex) { }
+            }
+            //DiagonalRightMove
+            try
+            {
+                Tuple<int, int> diagonalRightMove = new Tuple<int, int>(
+                        (col.X + (1 * PlayerMoveDirection(piece.Player1))),
+                        (col.Y + 1)
+                    );
+                if ((model.ChessBoard.Board[diagonalRightMove.Item1][diagonalRightMove.Item2].Piece != null)
+                    &&
+                    (model.ChessBoard.Board[diagonalRightMove.Item1][diagonalRightMove.Item2].Piece.Player1 != piece.Player1))
+                    moves.Add(diagonalRightMove);
+            }
+            catch (Exception ex) { }
+            //DiagonalLeftMove
+            try
+            {
+                Tuple<int, int> diagonalLeftMove = new Tuple<int, int>(
+                        (col.X + (1 * PlayerMoveDirection(piece.Player1))),
+                        (col.Y - 1)
+                    );
+                if ((model.ChessBoard.Board[diagonalLeftMove.Item1][diagonalLeftMove.Item2].Piece != null)
+                    &&
+                    (model.ChessBoard.Board[diagonalLeftMove.Item1][diagonalLeftMove.Item2].Piece.Player1 != piece.Player1))
+                    moves.Add(diagonalLeftMove);
+            }
+            catch (Exception ex) { }
+            //Special pawn left move
+            try
+            {
+                Tuple<int, int> specialLeftMove = new Tuple<int, int>(
+                        (col.X),
+                        (col.Y - 1)
+                    );
+                if (model.ChessBoard.Board[specialLeftMove.Item1][specialLeftMove.Item2].Piece != null
+                    &&
+                    model.ChessBoard.Board[specialLeftMove.Item1][specialLeftMove.Item2].Piece.Type == ChessPieceType.Pawn
+                    &&
+                    model.ChessBoard.Board[specialLeftMove.Item1][specialLeftMove.Item2].Piece.PawnSpecialMove == true
+                    )
+                {
+                    moves.Add(specialLeftMove);
+                }
+            }
+            catch (Exception) { }
+            //Special pawn right move
+            try
+            {
+                Tuple<int, int> specialRightMove = new Tuple<int, int>(
+                        (col.X),
+                        (col.Y + 1)
+                    );
+                if (model.ChessBoard.Board[specialRightMove.Item1][specialRightMove.Item2].Piece != null
+                    &&
+                    model.ChessBoard.Board[specialRightMove.Item1][specialRightMove.Item2].Piece.Type == ChessPieceType.Pawn
+                    &&
+                    model.ChessBoard.Board[specialRightMove.Item1][specialRightMove.Item2].Piece.PawnSpecialMove == true
+                    )
+                {
+                    moves.Add(specialRightMove);
+                }
+            }
+            catch (Exception) { }
+
+            return moves;
+        }
+        //[NonAction]
+        //public List<Tuple<int, int>> GetKnightMoves(ChessGameModel model, ChessColumn col, ChessPiece piece)
+        //{
+        //    List<Tuple<int, int>> moves = new List<Tuple<int, int>>() { };
+        //    List<Tuple<int, int>> availableMoves = new List<Tuple<int, int>>() { };
+
+        //    //Add Moves
+        //    moves.Add(new Tuple<int, int>((col.X + 2) -1, (col.Y + 1) - 1));
+        //    moves.Add(new Tuple<int, int>((col.X + 2) -1, (col.Y + -1) - 1));
+
+        //    moves.Add(new Tuple<int, int>((col.X + -2) -1, (col.Y + 1) - 1));
+        //    moves.Add(new Tuple<int, int>((col.X + -2) -1, (col.Y + -1) - 1));
+
+        //    moves.Add(new Tuple<int, int>((col.X + 1) -1, (col.Y + 2) - 1));
+        //    moves.Add(new Tuple<int, int>((col.X + -1) -1, (col.Y + 2) - 1));
+
+        //    moves.Add(new Tuple<int, int>((col.X + 1) -1, (col.Y + -2) - 1));
+        //    moves.Add(new Tuple<int, int>((col.X + -1) -1, (col.Y + -2) - 1));
+
+        //    //Remove moves if col is empty or col contains same team piece
+        //    //else move can stay in list
+        //    foreach (var move in moves)
+        //    {
+        //        try
+        //        {
+        //            var moveCol = model.ChessBoard.Rows[move.Item1 - 1].Columns[move.Item2 - 1];
+        //            if (moveCol.Piece == null || moveCol.Piece.Player1 == piece.Player1)
+        //            {
+        //                //Do Nothing
+        //            }
+        //            else
+        //            {
+        //                availableMoves.Add(move);
+        //            }
+        //        }
+        //        catch (Exception ex)
+        //        {
+
+        //        }                
+        //    }
+        //    return availableMoves;
+        //}
         #endregion
 
         #region Main Game Functions
@@ -127,77 +284,24 @@ namespace MvcPractice.Areas.ChessGame.Controllers
             {
                 ChessGameModel model = ResetPotentialMovesAndGetGame();
                 model.PieceToPotentialMove = MoveModel;
-            
-                var col = model.ChessBoard.Rows[MoveModel.x - 1].Columns[MoveModel.y - 1];
+
+                var col = model.ChessBoard.Board[MoveModel.x][MoveModel.y];
                 var piece = col.Piece;
                 List<Tuple<int, int>> moves = new List<Tuple<int, int>>() { };
 
-                // #########
-                // - PAWN
-                //##########
                 if (MoveModel.pieceType == ChessPieceType.Pawn)
                 {
-                    //FirstMove
-                    try
-                    {
-                        Tuple<int, int> firstMove = new Tuple<int, int>(
-                                ((col.X - 1) + (1 * PlayerMoveDirection(piece.Player1))),
-                                (col.Y - 1)
-                            );
-                        if (model.ChessBoard.Rows[firstMove.Item1].Columns[firstMove.Item2].Piece == null)
-                            moves.Add(firstMove);
-                    }
-                    catch (Exception ex) { }
-                    //SecondMove
-                    try
-                    {
-                        Tuple<int, int> secondMove = new Tuple<int, int>(
-                                ((col.X - 1) + (2 * PlayerMoveDirection(piece.Player1))),
-                                (col.Y - 1)
-                            );
-                        if (piece.HasMoved == false && model.ChessBoard.Rows[secondMove.Item1].Columns[secondMove.Item2].Piece == null)
-                            moves.Add(secondMove);
-                    }
-                    catch (Exception ex) { }
-                    //DiagonalRightMove
-                    try
-                    {
-                        Tuple<int, int> diagonalRightMove = new Tuple<int, int>(
-                                ((col.X - 1) + (1 * PlayerMoveDirection(piece.Player1))),
-                                ((col.Y - 1) + 1)
-                            );
-                        if ((model.ChessBoard.Rows[diagonalRightMove.Item1].Columns[diagonalRightMove.Item2].Piece != null)
-                            &&
-                            (model.ChessBoard.Rows[diagonalRightMove.Item1].Columns[diagonalRightMove.Item2].Piece.Player1 != piece.Player1))
-                            moves.Add(diagonalRightMove);
-                    }
-                    catch (Exception ex) { }
-                    //DiagonalLeftMove
-                    try
-                    {
-                        Tuple<int, int> diagonalLeftMove = new Tuple<int, int>(
-                                ((col.X - 1) + (1 * PlayerMoveDirection(piece.Player1))),
-                                ((col.Y - 1) - 1)
-                            );
-                        if ((model.ChessBoard.Rows[diagonalLeftMove.Item1].Columns[diagonalLeftMove.Item2].Piece != null)
-                            &&
-                            (model.ChessBoard.Rows[diagonalLeftMove.Item1].Columns[diagonalLeftMove.Item2].Piece.Player1 != piece.Player1))
-                            moves.Add(diagonalLeftMove);
-                    }
-                    catch (Exception ex) { }
+                    moves = GetPawnMoves(model, col, piece);
                 }
-                // ##########
-                // - ROOK
-                //###########
-                else if (MoveModel.pieceType == ChessPieceType.Rook)
-                {
-
-                }
+                //else if (MoveModel.pieceType == ChessPieceType.Knight)
+                //{
+                //    moves = GetKnightMoves(model, col, piece);
+                //}
 
                 //Highlight the moves
                 foreach (var item in moves)
                 {
-                    model.ChessBoard.Rows[item.Item1].Columns[item.Item2].HighlightMove = true;
+                    model.ChessBoard.Board[item.Item1][item.Item2].HighlightMove = true;
                 }
 
                 //Build board up
@@ -218,7 +322,7 @@ namespace MvcPractice.Areas.ChessGame.Controllers
             {
                 ChessGameModel model = ResetPotentialMovesAndGetGame();
                 string html = _viewRenderService.RenderToStringAsync("_Board", model).Result;
-                return Json( new { success = true, html});
+                return Json(new { success = true, html });
             }
             catch (Exception ex)
             {
@@ -232,18 +336,54 @@ namespace MvcPractice.Areas.ChessGame.Controllers
             {
                 ChessGameModel model = GetGame();
 
-                //find and remove
-                var piece = model.ChessBoard.Rows[model.PieceToPotentialMove.x-1].Columns[model.PieceToPotentialMove.y-1].Piece;
-                model.ChessBoard.Rows[model.PieceToPotentialMove.x-1].Columns[model.PieceToPotentialMove.y-1].Piece = null;
+                //find pieceToMove and remove from column
+                var pieceToMove = model.ChessBoard.Board[model.PieceToPotentialMove.x][model.PieceToPotentialMove.y].Piece;
 
-                //find and insert
-                model.ChessBoard.Rows[moveModel.x-1].Columns[moveModel.y-1].Piece = piece;
+                //if pawn and second move and piece next to pawn will be a pawn set pawnspecialmove to true.
+                if (model.PieceToPotentialMove.pieceType == ChessPieceType.Pawn)
+                {
+                    if (pieceToMove.HasMoved == false && Math.Abs(model.PieceToPotentialMove.x - moveModel.x) == 2)
+                    {
+                        try
+                        {
+                            if(model.ChessBoard.Board[moveModel.x][moveModel.y + 1].Piece?.Type == ChessPieceType.Pawn)
+                                pieceToMove.PawnSpecialMove = true;
+                        }
+                        catch (Exception ex) {}
+
+                        try
+                        {
+                            if(model.ChessBoard.Board[moveModel.x][moveModel.y - 1].Piece?.Type == ChessPieceType.Pawn)
+                                pieceToMove.PawnSpecialMove = true;
+                        }
+                        catch (Exception ex) { }
+                    }
+                }
+
+                pieceToMove.HasMoved = true;
+                model.ChessBoard.Board[model.PieceToPotentialMove.x][model.PieceToPotentialMove.y].Piece = null;
+
+                //find pieceToReplace || Or Empty column and insert pieceToMove               
+                if (model.ChessBoard.Board[moveModel.x][moveModel.y].Piece != null)
+                {
+                    ChessPiece pieceToReplace = model.ChessBoard.Board[moveModel.x][moveModel.y].Piece;
+
+                    if (pieceToReplace.Player1 == true)
+                        model.ChessBoard.Player1DeadPieces.Add(pieceToReplace);
+                    else if (pieceToReplace.Player1 == false)
+                        model.ChessBoard.Player2DeadPieces.Add(pieceToReplace);
+
+                    model.ChessBoard.Board[moveModel.x][moveModel.y].Piece = null;
+                }
+                model.ChessBoard.Board[moveModel.x][moveModel.y].Piece = pieceToMove;
 
                 //reset game potentialmove
                 model.PieceToPotentialMove = null;
+                ChessGameModel newModel = ResetPotentialMovesFromGame(model);
+                SetGame(newModel);
 
                 string html = _viewRenderService.RenderToStringAsync("_Board", model).Result;
-                return Json(new { success = true, html});
+                return Json(new { success = true, html });
             }
             catch (Exception ex)
             {

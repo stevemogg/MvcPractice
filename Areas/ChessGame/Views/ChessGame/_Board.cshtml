@@ -1,22 +1,22 @@
 ﻿@model ChessGameModel
 
 
-<div class="d-flex flex-column player1 flex-wrap" style="">
+<div class="d-flex flex-column player1 flex-wrap" style="max-height: 720px;">
     @{
-        for (int i = 1; i < 17; i++)
+        foreach (var item in Model.ChessBoard.Player1DeadPieces)
         {
-            @:<div class="w-100 h-100 piece-@i" style="max-width: 50px;"></div>
+            @Html.Raw(item.FaIcon)
         }
     }
 </div>
 <div class="d-flex flex-column w-100 h-100 chess-board" style="max-width:720px; max-height: 720px;">
-
     @{
-        foreach (var row in Model.ChessBoard.Rows)
+        int rowCount = 0;
+        foreach (var row in Model.ChessBoard.Board)
         {
-            <div class="d-flex w-100 h-100 board-row" style="border-top: 2px solid black; @(row.X == 8 ? Html.Raw("border-bottom: 2px solid black;") : Html.Raw(""))">
+            <div class="d-flex w-100 h-100 board-row" style="border-top: 2px solid black; @(rowCount == 7 ? Html.Raw("border-bottom: 2px solid black;") : Html.Raw(""))">
                 @{
-                    foreach (var col in row.Columns)
+                    foreach (var col in row)
                     {
                         var bgColor = "";
                         if (col.HighlightMove == true)
@@ -39,7 +39,7 @@
                                     bgColor = "bg-warning";
                             }
                         }                        
-                        <div class="board-col d-flex justify-content-center align-items-center r-@(col.X)c-@(col.Y) @bgColor p-1 w-100 h-100" data-x="@col.X" data-y="@col.Y" style="max-width: 90px !important; max-height: 90px !important; font-size: 70px; border-left: 2px solid black; @(col.Y == 8 ? Html.Raw("border-right: 2px solid black;") : Html.Raw(""))">                            
+                        <div class="board-col d-flex justify-content-center align-items-center r-@(col.X)c-@(col.Y) @bgColor p-1 w-100 h-100" data-x="@col.X" data-y="@col.Y" style="max-width: 90px !important; max-height: 90px !important; font-size: 70px; border-left: 2px solid black; @(col.Y == 7 ? Html.Raw("border-right: 2px solid black;") : Html.Raw(""))">                            
                             @{
                                 if (col.Piece != null)
                                 {
@@ -50,14 +50,15 @@
                     }
                 }
             </div>
+            rowCount++;
         }
     }
 </div>
 <div class="d-flex flex-column player2 flex-wrap" style="max-height: 720px;">
     @{
-        for (int i = 1; i < 17; i++)
+        foreach (var item in Model.ChessBoard.Player2DeadPieces)
         {
-            @:<div class="w-100 h-100 piece-@i" style="max-width: 50px;"></div>
+            @Html.Raw(item.FaIcon)
         }
     }
 </div>
