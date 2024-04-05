@@ -134,6 +134,19 @@ namespace MvcPractice.Areas.ChessGame.Controllers
 
             return model;
         }
+        [NonAction]
+        public ChessGameModel ResetPawnSpecialMovesFromGame(ChessGameModel model)
+        {
+            foreach (var row in model.ChessBoard.Board)
+            {
+                foreach (var col in row)
+                {
+                    if(col.Piece != null)
+                        col.Piece.PawnSpecialMove = false;
+                }
+            }
+            return model;
+        }
         #endregion
 
         #region Piece Moves
@@ -335,9 +348,10 @@ namespace MvcPractice.Areas.ChessGame.Controllers
             try
             {
                 ChessGameModel model = GetGame();
+                model = ResetPawnSpecialMovesFromGame(model);
 
-                //find pieceToMove and remove from column
-                var pieceToMove = model.ChessBoard.Board[model.PieceToPotentialMove.x][model.PieceToPotentialMove.y].Piece;
+                //find the pieces 
+                ChessPiece? pieceToMove = model.ChessBoard.Board[model.PieceToPotentialMove.x][model.PieceToPotentialMove.y].Piece;
 
                 //if pawn and second move and piece next to pawn will be a pawn set pawnspecialmove to true.
                 if (model.PieceToPotentialMove.pieceType == ChessPieceType.Pawn)
@@ -363,19 +377,24 @@ namespace MvcPractice.Areas.ChessGame.Controllers
                 pieceToMove.HasMoved = true;
                 model.ChessBoard.Board[model.PieceToPotentialMove.x][model.PieceToPotentialMove.y].Piece = null;
 
+                ChessPiece pieceToReplace = null;
                 //find pieceToReplace || Or Empty column and insert pieceToMove               
                 if (model.ChessBoard.Board[moveModel.x][moveModel.y].Piece != null)
                 {
-                    ChessPiece pieceToReplace = model.ChessBoard.Board[moveModel.x][moveModel.y].Piece;
-
+                    pieceToReplace = model.ChessBoard.Board[moveModel.x][moveModel.y].Piece;
                     if (pieceToReplace.Player1 == true)
                         model.ChessBoard.Player1DeadPieces.Add(pieceToReplace);
                     else if (pieceToReplace.Player1 == false)
                         model.ChessBoard.Player2DeadPieces.Add(pieceToReplace);
-
+                    
                     model.ChessBoard.Board[moveModel.x][moveModel.y].Piece = null;
                 }
-                model.ChessBoard.Board[moveModel.x][moveModel.y].Piece = pieceToMove;
+
+                //logic for en passant pawn taking the piece but the square above
+                if (pieceToReplace != null && pieceToReplace.PawnSpecialMove == true)                 
+                    model.ChessBoard.Board[moveModel.x + (1*PlayerMoveDirection(pieceToMove.Player1))][moveModel.y].Piece = pieceToMove;                
+                else
+                    model.ChessBoard.Board[moveModel.x][moveModel.y].Piece = pieceToMove;
 
                 //reset game potentialmove
                 model.PieceToPotentialMove = null;
