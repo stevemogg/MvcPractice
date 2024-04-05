@@ -19,7 +19,6 @@ namespace MvcPractice.Areas.ChessGame.Controllers
     {
         #region Dependancy Injection && Game Setup / Get / ResetPotentialMoves
         private readonly IViewRenderService _viewRenderService;
-        public ChessGameModel _game { get; set; }
         public ChessGameController(IViewRenderService viewRenderService)
         {
             _viewRenderService = viewRenderService;
@@ -35,6 +34,9 @@ namespace MvcPractice.Areas.ChessGame.Controllers
             try
             {
                 ChessGameModel model = new ChessGameModel() { };
+
+                model.PromotionPieces = new List<ChessPiece>() { new KnightPiece(true), new BishopPiece(true), new RookPiece(true), new QueenPiece(true) };
+                
                 model.ChessBoard = new ChessBoard();
 
                 model.ChessBoard.Player1DeadPieces = new List<ChessPiece> { };
@@ -321,7 +323,7 @@ namespace MvcPractice.Areas.ChessGame.Controllers
                 string html = _viewRenderService.RenderToStringAsync("_Board", model).Result;
                 //Set the new model in the session with the highlighted moves
                 SetGame(model);
-                return Json(new { success = true, html });
+                return Json(new { success = true, html, potentialMove = Newtonsoft.Json.JsonConvert.SerializeObject(MoveModel) });
             }
             catch (Exception ex)
             {
@@ -391,11 +393,25 @@ namespace MvcPractice.Areas.ChessGame.Controllers
                 }
 
                 //logic for en passant pawn taking the piece but the square above
-                if (pieceToReplace != null && pieceToReplace.PawnSpecialMove == true)                 
-                    model.ChessBoard.Board[moveModel.x + (1*PlayerMoveDirection(pieceToMove.Player1))][moveModel.y].Piece = pieceToMove;                
+                if (pieceToReplace != null && pieceToReplace.PawnSpecialMove == true)
+                    model.ChessBoard.Board[moveModel.x + (1 * PlayerMoveDirection(pieceToMove.Player1))][moveModel.y].Piece = pieceToMove;
                 else
-                    model.ChessBoard.Board[moveModel.x][moveModel.y].Piece = pieceToMove;
+                {
+                    if (moveModel.promotionPiece != null)
+                    {
+                        ChessPiece promoPiece =
+                            moveModel.promotionPiece == ChessPieceType.Knight ? new KnightPiece(pieceToMove.Player1) :
+                            moveModel.promotionPiece == ChessPieceType.Bishop ? new BishopPiece(pieceToMove.Player1) :
+                            moveModel.promotionPiece == ChessPieceType.Rook ? new RookPiece(pieceToMove.Player1) :
+                            new QueenPiece(pieceToMove.Player1);
 
+                        model.ChessBoard.Board[moveModel.x][moveModel.y].Piece = promoPiece;
+                    }
+                    else
+                    {
+                        model.ChessBoard.Board[moveModel.x][moveModel.y].Piece = pieceToMove;
+                    }
+                }
                 //reset game potentialmove
                 model.PieceToPotentialMove = null;
                 ChessGameModel newModel = ResetPotentialMovesFromGame(model);

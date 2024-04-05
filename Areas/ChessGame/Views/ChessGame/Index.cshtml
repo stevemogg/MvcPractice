@@ -12,7 +12,49 @@
         height: auto;
         margin: 4px;
     }
+    .promote-btn svg{
+        font-size: 3.5rem;
+    }
+    .promote-btn p{
+        font-size: 2rem;
+    }
+    .promote-btn:hover{
+        box-shadow: 0 0 0 0.25rem rgba(13,110,253,.25);
+    }
 </style>
+
+<div class="modal fade" id="pawn-promo-modal" tabindex="-1" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="staticBackdropLabel">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Promote Your Pawn!</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body d-flex justify-content-center align-items-center py-5 gap-2 pawn-promo-container">
+                @{
+                    foreach (var item in Model.PromotionPieces)
+                    {
+                        int points = 
+                        item.Type == ChessPieceType.Knight ? 3 : 
+                        item.Type == ChessPieceType.Bishop ? 3 : 
+                        item.Type == ChessPieceType.Rook ? 5 : 
+                        item.Type == ChessPieceType.Queen ? 9 :
+                        0;
+                                <button class="btn promote-btn" data-piece="@item.Type">
+                                    <p>@item.Type</p>
+                                    @Html.Raw(item.FaIcon)                            
+                                    <p>@(points)</p>
+                                </button>
+                    }
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" id="submit-btn" class="btn btn-primary">Promote</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 @*Main chess board layout*@
 <div class="d-flex justify-content-around align-items-center chess-board-container w-100" style="background-color: saddlebrown; height: 720px;">
@@ -23,6 +65,9 @@
 {
     @await Html.PartialAsync("_ValidationScriptsPartial")
     <script>
+
+        var lastPieceToShowMoves = null;
+        var promotionMove = null;
 
         $("body").on("click", ".bg-success, .bg-warning", function (e) {
             e.preventDefault();
@@ -39,6 +84,7 @@
                     },
                     function (d) {
                         $(".chess-board-container").html(d.html);
+                        lastPieceToShowMoves = JSON.parse(d.potentialMove);
                     }
                 );
             }
@@ -60,15 +106,42 @@
             var me = $(this);
             var piece = $(me).find("svg");
 
-            $.post("@Url.Action("MovePiece")",
-                {
+            //pawn promotion
+            if ((lastPieceToShowMoves.pieceType = "Pawn" && piece.closest(".board-col").data("x") == 0)
+                ||
+                (lastPieceToShowMoves.pieceType = "Pawn" && piece.closest(".board-col").data("x") == 7)) 
+            {
+                $("#pawn-promo-modal").modal("show");
+                promotionMove = {
                     "x": parseInt($(me).attr("data-x")),
                     "y": parseInt($(me).attr("data-y"))
-                },
+                };
+            }
+            else {
+                $.post("@Url.Action("MovePiece")",
+                    {
+                        "x": parseInt($(me).attr("data-x")),
+                        "y": parseInt($(me).attr("data-y"))
+                    },
+                    function (d) {
+                        $(".chess-board-container").html(d.html);
+                    }
+                );
+            }
+        })
+
+        $("body").on("click", ".pawn-promo-container button", function (e) {
+            e.preventDefault();
+            $("#pawn-promo-modal").modal("hide");
+            promotionMove.promotionPiece = $(this).data("piece");
+            
+            $.post("@Url.Action("MovePiece")",
+                promotionMove,
                 function (d) {
                     $(".chess-board-container").html(d.html);
+                    promotionMove.promotionPiece = null;
                 }
-            );            
+            );
         })
 
         // var potentialMoveElements = [];

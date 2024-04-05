@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Routing.Matching;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.TeamFoundation.SourceControl.WebApi;
 using System.Diagnostics.CodeAnalysis;
 using System.Media;
 using System.Net;
@@ -12,6 +13,7 @@ namespace MvcPractice.Areas.ChessGame.Models
         public PieceToPotentialMove PieceToPotentialMove { get; set; }
         public int TurnCount { get; set; }
         public bool Turn { get; set; }
+        public List<ChessPiece> PromotionPieces { get; set; }
     }
 
     #region Chess functionality models
@@ -25,6 +27,7 @@ namespace MvcPractice.Areas.ChessGame.Models
     {
         public int x { get; set; }
         public int y { get; set; }
+        public ChessPieceType? promotionPiece { get; set; }
     }
     #endregion
 
