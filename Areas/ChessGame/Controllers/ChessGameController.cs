@@ -550,6 +550,34 @@ namespace MvcPractice.Areas.ChessGame.Controllers
                 catch (Exception) { }
             }
 
+            //Castle Move
+            if(piece.HasMoved == false)
+            {
+                //right castle
+                if (model.ChessBoard.Board[col.X][col.Y+1].Piece == null
+                    &&
+                    model.ChessBoard.Board[col.X][col.Y+2].Piece == null
+                    &&
+                    model.ChessBoard.Board[col.X][col.Y+3].Piece?.HasMoved == false
+                    )
+                {
+                    availableMoves.Add(new Tuple<int, int>(col.X, col.Y+3));
+                }
+
+                //left castle
+                if (model.ChessBoard.Board[col.X][col.Y - 1].Piece == null
+                    &&
+                    model.ChessBoard.Board[col.X][col.Y - 2].Piece == null
+                    &&
+                    model.ChessBoard.Board[col.X][col.Y - 3].Piece == null
+                    &&
+                    model.ChessBoard.Board[col.X][col.Y - 4].Piece?.HasMoved == false
+                    )
+                {
+                    availableMoves.Add(new Tuple<int, int>(col.X, col.Y - 4));
+                }
+            }
+
             return availableMoves;
         }
         #endregion
@@ -667,11 +695,13 @@ namespace MvcPractice.Areas.ChessGame.Controllers
                 if (model.ChessBoard.Board[moveModel.x][moveModel.y].Piece != null)
                 {
                     pieceToReplace = model.ChessBoard.Board[moveModel.x][moveModel.y].Piece;
-                    if (pieceToReplace.Player1 == true)
-                        model.ChessBoard.Player1DeadPieces.Add(pieceToReplace);
-                    else if (pieceToReplace.Player1 == false)
-                        model.ChessBoard.Player2DeadPieces.Add(pieceToReplace);
-                    
+                    if (pieceToReplace.Player1 != pieceToMove.Player1)
+                    {
+                        if (pieceToReplace.Player1 == true)
+                            model.ChessBoard.Player1DeadPieces.Add(pieceToReplace);
+                        else if (pieceToReplace.Player1 == false)
+                            model.ChessBoard.Player2DeadPieces.Add(pieceToReplace);
+                    }                                        
                     model.ChessBoard.Board[moveModel.x][moveModel.y].Piece = null;
                 }
 
@@ -695,7 +725,28 @@ namespace MvcPractice.Areas.ChessGame.Controllers
                     }
                     else
                     {
-                        model.ChessBoard.Board[moveModel.x][moveModel.y].Piece = pieceToMove;
+                        //King castle logic
+                        if (
+                            (pieceToMove?.Type == ChessPieceType.King && pieceToMove?.HasMoved == false)
+                            ||
+                            (pieceToReplace?.Type == ChessPieceType.Rook && pieceToReplace?.HasMoved == false)
+                            )
+                        {
+                            if(moveModel.y == 0)
+                            {
+                                model.ChessBoard.Board[moveModel.x][moveModel.y + 3].Piece = pieceToReplace;                                
+                                model.ChessBoard.Board[moveModel.x][moveModel.y + 2].Piece = pieceToMove;                                
+                            }
+                            else if (moveModel.x == 7)
+                            {
+                                model.ChessBoard.Board[moveModel.x][moveModel.y - 1].Piece = pieceToReplace;
+                                model.ChessBoard.Board[moveModel.x][moveModel.y - 2].Piece = pieceToMove;
+                            }
+                        }
+                        else
+                        {
+                            model.ChessBoard.Board[moveModel.x][moveModel.y].Piece = pieceToMove;
+                        }
                     }
                 }
 
