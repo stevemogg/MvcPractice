@@ -310,14 +310,14 @@ namespace MvcPractice.Areas.ChessGame.Controllers
                 {
                     ChessColumn? moveCol = model.ChessBoard.Board[col.X + i][col.Y];
                     if (moveCol.Piece == null)
-                        moves.Add(new Tuple<int, int>(col.X + i, col.Y));
+                        moves.Add(new Tuple<int, int>(moveCol.X, moveCol.Y));
                     else
                     {
                         if (moveCol.Piece.Player1 == piece.Player1)
                             breakBool = true;
                         else
                         {
-                            moves.Add(new Tuple<int, int>(col.X + i, col.Y));
+                            moves.Add(new Tuple<int, int>(moveCol.X, moveCol.Y));
                             breakBool = true;
                         }
                     }
@@ -335,14 +335,14 @@ namespace MvcPractice.Areas.ChessGame.Controllers
                 {
                     ChessColumn? moveCol = model.ChessBoard.Board[col.X + i][col.Y];
                     if (moveCol.Piece == null)
-                        moves.Add(new Tuple<int, int>(col.X + i, col.Y));
+                        moves.Add(new Tuple<int, int>(moveCol.X, moveCol.Y));
                     else
                     {
                         if (moveCol.Piece.Player1 == piece.Player1)
                             breakBool = true;
                         else
                         {
-                            moves.Add(new Tuple<int, int>(col.X + i, col.Y));
+                            moves.Add(new Tuple<int, int>(moveCol.X, moveCol.Y));
                             breakBool = true;
                         }
                     }
@@ -360,14 +360,14 @@ namespace MvcPractice.Areas.ChessGame.Controllers
                 {
                     ChessColumn? moveCol = model.ChessBoard.Board[col.X][col.Y+i];
                     if (moveCol.Piece == null)
-                            moves.Add(new Tuple<int, int>(col.X, col.Y + i));
+                        moves.Add(new Tuple<int, int>(moveCol.X, moveCol.Y));
                     else
                     {
                         if(moveCol.Piece.Player1 == piece.Player1)
                             breakBool = true;
                         else
                         {
-                            moves.Add(new Tuple<int, int>(col.X, col.Y + i));
+                            moves.Add(new Tuple<int, int>(moveCol.X, moveCol.Y));
                             breakBool |= true;
                         }
                     }
@@ -385,14 +385,14 @@ namespace MvcPractice.Areas.ChessGame.Controllers
                 {
                     ChessColumn? moveCol = model.ChessBoard.Board[col.X][col.Y + i];
                     if (moveCol.Piece == null)
-                        moves.Add(new Tuple<int, int>(col.X, col.Y + i));
+                        moves.Add(new Tuple<int, int>(moveCol.X, moveCol.Y));
                     else
                     {
                         if (moveCol.Piece.Player1 == piece.Player1)
                             breakBool = true;
                         else
                         {
-                            moves.Add(new Tuple<int, int>(col.X, col.Y + i));
+                            moves.Add(new Tuple<int, int>(moveCol.X, moveCol.Y));
                             breakBool |= true;
                         }
                     }
@@ -511,21 +511,46 @@ namespace MvcPractice.Areas.ChessGame.Controllers
             }
             return moves;
         }
-        //Queen
-        [NonAction]
-        public List<Tuple<int, int>> GetQueenMoves(ChessGameModel model, ChessColumn col, ChessPiece piece)
-        {
-            List<Tuple<int, int>> moves = new List<Tuple<int, int>>() { };
-
-            return moves;
-        }
         //King
         [NonAction]
         public List<Tuple<int, int>> GetKingMoves(ChessGameModel model, ChessColumn col, ChessPiece piece)
         {
-            List<Tuple<int, int>> moves = new List<Tuple<int, int>>() { };
+            List<Tuple<int, int>> availableMoves = new List<Tuple<int, int>>() { };
+            List<Tuple<int, int>> moves = new List<Tuple<int, int>>
+            {
+                //top left
+                new Tuple<int, int>(-1, -1),
+                //top
+                new Tuple<int, int>(-1, 0),
+                //top right
+                new Tuple<int, int>(-1, 1),
+                //right
+                new Tuple<int, int>(0, 1),
+                //bottom right
+                new Tuple<int, int>(1, 1),
+                //bottom
+                new Tuple<int, int>(1, 0),
+                //bottom left
+                new Tuple<int, int>(1, -1),
+                //left
+                new Tuple<int, int>(0, -1)
+            };
 
-            return moves;
+            foreach (var move in moves)
+            {
+                try
+                {
+                    ChessColumn? moveCol = model.ChessBoard.Board[col.X + move.Item1][col.Y + move.Item2];
+                    if (moveCol.Piece == null)
+                        availableMoves.Add(new Tuple<int, int>(moveCol.X, moveCol.Y));
+                    else
+                        if (moveCol.Piece.Player1 != piece.Player1)
+                        availableMoves.Add(new Tuple<int, int>(moveCol.X, moveCol.Y));
+                }
+                catch (Exception) { }
+            }
+
+            return availableMoves;
         }
         #endregion
 
@@ -560,7 +585,12 @@ namespace MvcPractice.Areas.ChessGame.Controllers
                 }
                 else if (MoveModel.pieceType == ChessPieceType.Queen)
                 {
-                    moves = GetQueenMoves(model, col, piece);
+                    moves = GetRookMoves(model, col, piece);
+
+                    List<Tuple<int, int>>? bishopMoves = GetBishopMoves(model, col, piece);
+                    foreach (Tuple<int, int> move in bishopMoves)                    
+                        moves.Add(move);
+                    
                 }
                 else if (MoveModel.pieceType == ChessPieceType.King)
                 {
