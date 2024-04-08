@@ -2,6 +2,7 @@
 using Microsoft.TeamFoundation.Dashboards.WebApi;//
 using Microsoft.TeamFoundation.Work.WebApi;
 using Microsoft.TeamFoundation.WorkItemTracking.Process.WebApi.Models;
+using Microsoft.VisualStudio.Services.CircuitBreaker;
 using Microsoft.VisualStudio.Services.Profile;
 using Microsoft.VisualStudio.Services.TestResults.WebApi;
 using MvcPractice.Areas.ChessGame.Models;
@@ -148,6 +149,15 @@ namespace MvcPractice.Areas.ChessGame.Controllers
                 }
             }
             return model;
+        }
+        [NonAction]
+        public ChessGameModel PawnSpecialMoveExists(ChessGameModel model)
+        {
+            foreach (var row in model.ChessBoard.Board)
+                foreach (var col in row)
+                    if(col.Piece != null)
+                        col.Piece.PawnSpecialMove = false;  
+            return model;            
         }
         #endregion
 
@@ -349,8 +359,7 @@ namespace MvcPractice.Areas.ChessGame.Controllers
         {
             try
             {
-                ChessGameModel model = GetGame();
-                model = ResetPawnSpecialMovesFromGame(model);
+                ChessGameModel model = GetGame();                
 
                 //find the pieces 
                 ChessPiece? pieceToMove = model.ChessBoard.Board[model.PieceToPotentialMove.x][model.PieceToPotentialMove.y].Piece;
@@ -394,7 +403,10 @@ namespace MvcPractice.Areas.ChessGame.Controllers
 
                 //logic for en passant pawn taking the piece but the square above
                 if (pieceToReplace != null && pieceToReplace.PawnSpecialMove == true)
+                {
                     model.ChessBoard.Board[moveModel.x + (1 * PlayerMoveDirection(pieceToMove.Player1))][moveModel.y].Piece = pieceToMove;
+                    //model = ResetPawnSpecialMovesFromGame(model);
+                }
                 else
                 {
                     if (moveModel.promotionPiece != null)
@@ -412,6 +424,10 @@ namespace MvcPractice.Areas.ChessGame.Controllers
                         model.ChessBoard.Board[moveModel.x][moveModel.y].Piece = pieceToMove;
                     }
                 }
+
+                if (pieceToMove.PawnSpecialMove != true && pieceToReplace?.PawnSpecialMove != true)                
+                    model = PawnSpecialMoveExists(model);
+                
                 //reset game potentialmove
                 model.PieceToPotentialMove = null;
                 ChessGameModel newModel = ResetPotentialMovesFromGame(model);
