@@ -107,10 +107,9 @@
             var piece = $(me).find("svg");
 
             //pawn promotion
-            if ((lastPieceToShowMoves.pieceType = "Pawn" && piece.closest(".board-col").data("x") == 0)
+            if ((lastPieceToShowMoves.pieceType == @((int)ChessPieceType.Pawn) && piece.closest(".board-col").data("x") == 0)
                 ||
-                (lastPieceToShowMoves.pieceType = "Pawn" && piece.closest(".board-col").data("x") == 7)) 
-            {
+                (lastPieceToShowMoves.pieceType == @((int)ChessPieceType.Pawn) && piece.closest(".board-col").data("x") == 7)) {
                 $("#pawn-promo-modal").modal("show");
                 promotionMove = {
                     "x": parseInt($(me).attr("data-x")),

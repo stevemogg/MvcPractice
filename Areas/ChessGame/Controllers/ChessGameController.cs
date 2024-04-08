@@ -257,48 +257,276 @@ namespace MvcPractice.Areas.ChessGame.Controllers
 
             return moves;
         }
-        //[NonAction]
-        //public List<Tuple<int, int>> GetKnightMoves(ChessGameModel model, ChessColumn col, ChessPiece piece)
-        //{
-        //    List<Tuple<int, int>> moves = new List<Tuple<int, int>>() { };
-        //    List<Tuple<int, int>> availableMoves = new List<Tuple<int, int>>() { };
+        //Knight
+        [NonAction]
+        public List<Tuple<int, int>> GetKnightMoves(ChessGameModel model, ChessColumn col, ChessPiece piece)
+        {
+            List<Tuple<int, int>> moves = new List<Tuple<int, int>>() { };
+            List<Tuple<int, int>> availableMoves = new List<Tuple<int, int>>() { };
 
-        //    //Add Moves
-        //    moves.Add(new Tuple<int, int>((col.X + 2) -1, (col.Y + 1) - 1));
-        //    moves.Add(new Tuple<int, int>((col.X + 2) -1, (col.Y + -1) - 1));
+            //Add Moves
+            moves.Add(new Tuple<int, int>((col.X + 2), (col.Y + 1)));
+            moves.Add(new Tuple<int, int>((col.X + 2), (col.Y + -1)));
 
-        //    moves.Add(new Tuple<int, int>((col.X + -2) -1, (col.Y + 1) - 1));
-        //    moves.Add(new Tuple<int, int>((col.X + -2) -1, (col.Y + -1) - 1));
+            moves.Add(new Tuple<int, int>((col.X + -2), (col.Y + 1)));
+            moves.Add(new Tuple<int, int>((col.X + -2), (col.Y + -1)));
 
-        //    moves.Add(new Tuple<int, int>((col.X + 1) -1, (col.Y + 2) - 1));
-        //    moves.Add(new Tuple<int, int>((col.X + -1) -1, (col.Y + 2) - 1));
+            moves.Add(new Tuple<int, int>((col.X + 1), (col.Y + 2)));
+            moves.Add(new Tuple<int, int>((col.X + -1), (col.Y + 2)));
 
-        //    moves.Add(new Tuple<int, int>((col.X + 1) -1, (col.Y + -2) - 1));
-        //    moves.Add(new Tuple<int, int>((col.X + -1) -1, (col.Y + -2) - 1));
+            moves.Add(new Tuple<int, int>((col.X + 1), (col.Y + -2)));
+            moves.Add(new Tuple<int, int>((col.X + -1), (col.Y + -2)));
 
-        //    //Remove moves if col is empty or col contains same team piece
-        //    //else move can stay in list
-        //    foreach (var move in moves)
-        //    {
-        //        try
-        //        {
-        //            var moveCol = model.ChessBoard.Rows[move.Item1 - 1].Columns[move.Item2 - 1];
-        //            if (moveCol.Piece == null || moveCol.Piece.Player1 == piece.Player1)
-        //            {
-        //                //Do Nothing
-        //            }
-        //            else
-        //            {
-        //                availableMoves.Add(move);
-        //            }
-        //        }
-        //        catch (Exception ex)
-        //        {
+            //Remove moves if col is empty or col contains same team piece
+            //else move can stay in list
+            foreach (var move in moves)
+            {
+                try
+                {
+                    ChessColumn? moveCol = model.ChessBoard.Board[move.Item1][move.Item2];
+                    if (moveCol.Piece == null || moveCol.Piece.Player1 != piece.Player1)
+                    {
+                        availableMoves.Add(move);
+                    }
+                }
+                catch (Exception ex)
+                {
 
-        //        }                
-        //    }
-        //    return availableMoves;
-        //}
+                }
+            }
+            return availableMoves;
+        }
+        //Rook
+        [NonAction]
+        public List<Tuple<int, int>> GetRookMoves(ChessGameModel model, ChessColumn col, ChessPiece piece)
+        {
+            List<Tuple<int, int>> moves = new List<Tuple<int, int>>() { };
+
+            // x Moves Up           
+            for (int i = 1; i < 8; i++)
+            {
+                bool breakBool = false;
+                try
+                {
+                    ChessColumn? moveCol = model.ChessBoard.Board[col.X + i][col.Y];
+                    if (moveCol.Piece == null)
+                        moves.Add(new Tuple<int, int>(col.X + i, col.Y));
+                    else
+                    {
+                        if (moveCol.Piece.Player1 == piece.Player1)
+                            breakBool = true;
+                        else
+                        {
+                            moves.Add(new Tuple<int, int>(col.X + i, col.Y));
+                            breakBool = true;
+                        }
+                    }
+                }
+                catch (Exception ex){ breakBool = true; }
+
+                if (breakBool)
+                    break;
+            }
+            // x Moves down           
+            for (int i = -1; i > -8; i--)
+            {
+                bool breakBool = false;
+                try
+                {
+                    ChessColumn? moveCol = model.ChessBoard.Board[col.X + i][col.Y];
+                    if (moveCol.Piece == null)
+                        moves.Add(new Tuple<int, int>(col.X + i, col.Y));
+                    else
+                    {
+                        if (moveCol.Piece.Player1 == piece.Player1)
+                            breakBool = true;
+                        else
+                        {
+                            moves.Add(new Tuple<int, int>(col.X + i, col.Y));
+                            breakBool = true;
+                        }
+                    }
+                }
+                catch (Exception ex){ breakBool = true; }
+
+                if (breakBool)
+                    break;
+            }
+            // y Moves Left           
+            for (int i = 1; i < 8; i++)
+            {
+                bool breakBool = false;
+                try
+                {
+                    ChessColumn? moveCol = model.ChessBoard.Board[col.X][col.Y+i];
+                    if (moveCol.Piece == null)
+                            moves.Add(new Tuple<int, int>(col.X, col.Y + i));
+                    else
+                    {
+                        if(moveCol.Piece.Player1 == piece.Player1)
+                            breakBool = true;
+                        else
+                        {
+                            moves.Add(new Tuple<int, int>(col.X, col.Y + i));
+                            breakBool |= true;
+                        }
+                    }
+                }
+                catch (Exception ex) { breakBool = true; }
+
+                if (breakBool)
+                    break;
+            }
+            // y Moves Right           
+            for (int i = -1; i > -8; i--)
+            {
+                bool breakBool = false;
+                try
+                {
+                    ChessColumn? moveCol = model.ChessBoard.Board[col.X][col.Y + i];
+                    if (moveCol.Piece == null)
+                        moves.Add(new Tuple<int, int>(col.X, col.Y + i));
+                    else
+                    {
+                        if (moveCol.Piece.Player1 == piece.Player1)
+                            breakBool = true;
+                        else
+                        {
+                            moves.Add(new Tuple<int, int>(col.X, col.Y + i));
+                            breakBool |= true;
+                        }
+                    }
+                }
+                catch (Exception ex) { breakBool = true; }
+
+                if (breakBool)
+                    break;
+            }
+            return moves;
+        }
+        //Bishop
+        [NonAction]
+        public List<Tuple<int, int>> GetBishopMoves(ChessGameModel model, ChessColumn col, ChessPiece piece)
+        {
+            List<Tuple<int, int>> moves = new List<Tuple<int, int>>() { };
+            //diagonal right down
+            for (int i = 1; i < 8; i++)
+            {
+                bool breakBool = false;
+                try
+                {
+                    ChessColumn? moveCol = model.ChessBoard.Board[col.X + i][col.Y + i];
+                    if (moveCol.Piece == null)
+                        moves.Add(new Tuple<int, int>(moveCol.X, moveCol.Y));
+                    else
+                    {
+                        if (moveCol.Piece.Player1 == piece.Player1)
+                            breakBool = true;
+                        else
+                        {
+                            moves.Add(new Tuple<int, int>(moveCol.X, moveCol.Y));
+                            breakBool = true;
+                        }
+                    }
+                }
+                catch (Exception ex){ breakBool = true; }
+
+                if (breakBool == true)
+                    break;
+            }
+            //diagonal left down
+            for (int i = 1; i < 8; i++)
+            {
+                bool breakBool = false;
+                try
+                {
+                    ChessColumn? moveCol = model.ChessBoard.Board[col.X + i][col.Y - i];
+                    if (moveCol.Piece == null)
+                        moves.Add(new Tuple<int, int>(moveCol.X, moveCol.Y));
+                    else
+                    {
+                        if (moveCol.Piece.Player1 == piece.Player1)
+                            breakBool = true;
+                        else
+                        {
+                            moves.Add(new Tuple<int, int>(moveCol.X, moveCol.Y));
+                            breakBool = true;
+                        }
+                    }
+                }
+                catch (Exception ex) { breakBool = true; }
+
+                if (breakBool == true)
+                    break;
+            }
+            //diagonal left up
+            for (int i = 1; i < 8; i++)
+            {
+                bool breakBool = false;
+                try
+                {
+                    ChessColumn? moveCol = model.ChessBoard.Board[col.X - i][col.Y - i];
+                    if (moveCol.Piece == null)
+                        moves.Add(new Tuple<int, int>(moveCol.X, moveCol.Y));
+                    else
+                    {
+                        if (moveCol.Piece.Player1 == piece.Player1)
+                            breakBool = true;
+                        else
+                        {
+                            moves.Add(new Tuple<int, int>(moveCol.X, moveCol.Y));
+                            breakBool = true;
+                        }
+                    }
+                }
+                catch (Exception ex) { breakBool = true; }
+
+                if (breakBool == true)
+                    break;
+            }
+            //diagonal right up
+            for (int i = 1; i < 8; i++)
+            {
+                bool breakBool = false;
+                try
+                {
+                    ChessColumn? moveCol = model.ChessBoard.Board[col.X - i][col.Y + i];
+                    if (moveCol.Piece == null)
+                        moves.Add(new Tuple<int, int>(moveCol.X, moveCol.Y));
+                    else
+                    {
+                        if (moveCol.Piece.Player1 == piece.Player1)
+                            breakBool = true;
+                        else
+                        {
+                            moves.Add(new Tuple<int, int>(moveCol.X, moveCol.Y));
+                            breakBool = true;
+                        }
+                    }
+                }
+                catch (Exception ex) { breakBool = true; }
+
+                if (breakBool == true)
+                    break;
+            }
+            return moves;
+        }
+        //Queen
+        [NonAction]
+        public List<Tuple<int, int>> GetQueenMoves(ChessGameModel model, ChessColumn col, ChessPiece piece)
+        {
+            List<Tuple<int, int>> moves = new List<Tuple<int, int>>() { };
+
+            return moves;
+        }
+        //King
+        [NonAction]
+        public List<Tuple<int, int>> GetKingMoves(ChessGameModel model, ChessColumn col, ChessPiece piece)
+        {
+            List<Tuple<int, int>> moves = new List<Tuple<int, int>>() { };
+
+            return moves;
+        }
         #endregion
 
         #region Main Game Functions
@@ -318,10 +546,26 @@ namespace MvcPractice.Areas.ChessGame.Controllers
                 {
                     moves = GetPawnMoves(model, col, piece);
                 }
-                //else if (MoveModel.pieceType == ChessPieceType.Knight)
-                //{
-                //    moves = GetKnightMoves(model, col, piece);
-                //}
+                else if (MoveModel.pieceType == ChessPieceType.Knight)
+                {
+                    moves = GetKnightMoves(model, col, piece);
+                }
+                else if (MoveModel.pieceType == ChessPieceType.Rook)
+                {
+                    moves = GetRookMoves(model, col, piece);
+                }
+                else if (MoveModel.pieceType == ChessPieceType.Bishop)
+                {
+                    moves = GetBishopMoves(model, col, piece);
+                }
+                else if (MoveModel.pieceType == ChessPieceType.Queen)
+                {
+                    moves = GetQueenMoves(model, col, piece);
+                }
+                else if (MoveModel.pieceType == ChessPieceType.King)
+                {
+                    moves = GetKingMoves(model, col, piece);
+                }
 
                 //Highlight the moves
                 foreach (var item in moves)
